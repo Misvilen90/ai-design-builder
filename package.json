@@ -1,0 +1,15 @@
+{
+  "name": "ai-ui-builder",
+  "version": "1.0.0",
+  "description": "AI UI Builder web application combining Figma, Wix, Elementor, and Canva",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3000 --open",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}
