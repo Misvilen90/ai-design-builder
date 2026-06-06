@@ -61,6 +61,8 @@ export const RightPanel: React.FC = () => {
     pages, 
     activePageId, 
     selectedComponentId, 
+    selectedComponentIds,
+    setSelectionIds,
     updateComponentStyle, 
     updateComponentPosition, 
     updateComponentContent,
@@ -79,6 +81,26 @@ export const RightPanel: React.FC = () => {
 
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null);
   const [renameLayerValue, setRenameLayerValue] = useState('');
+  const [draggedLayerId, setDraggedLayerId] = useState<string | null>(null);
+
+  const handleLayerDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedLayerId(id);
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleLayerDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleLayerDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('text/plain') || draggedLayerId;
+    if (draggedId && draggedId !== targetId) {
+      useBuilderStore.getState().reorderComponents(draggedId, targetId);
+    }
+    setDraggedLayerId(null);
+  };
 
   const activePage = pages.find(p => p.id === activePageId);
   const selectedComponent = activePage 
@@ -549,13 +571,43 @@ export const RightPanel: React.FC = () => {
           </button>
 
           {showAdv && (
-            <div className="mt-1.5 pt-1.5 border-t border-slate-800/40">
+            <div className="mt-1.5 pt-1.5 border-t border-slate-800/40 space-y-1">
               <ColorPickerRow
                 label="Border Color"
                 value={comp.style.borderColor || '#1e293b'}
                 disabled={isLocked}
                 onChange={val => updateComponentStyle(comp.id, { borderColor: val })}
               />
+              <div className="flex flex-col gap-0.5">
+                <label className="text-slate-500">Border Width</label>
+                <input
+                  type="text"
+                  value={comp.style.borderWidth || '0px'}
+                  disabled={isLocked}
+                  onChange={e => updateComponentStyle(comp.id, { borderWidth: e.target.value })}
+                  className={`w-full text-[9px] p-0.5 px-1 rounded border outline-none bg-black/25 ${
+                    theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                  }`}
+                  placeholder="e.g. 1px"
+                />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-slate-500">Border Style</label>
+                <select
+                  value={comp.style.borderStyle || 'none'}
+                  disabled={isLocked}
+                  onChange={e => updateComponentStyle(comp.id, { borderStyle: e.target.value })}
+                  className={`w-full text-[9px] p-0.5 rounded border outline-none bg-[#101726]/60 ${
+                    theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                  }`}
+                >
+                  <option value="none">None</option>
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="double">Double</option>
+                </select>
+              </div>
             </div>
           )}
         </div>
@@ -724,21 +776,38 @@ export const RightPanel: React.FC = () => {
         </div>
         <div className="space-y-0.5">
           {sortedComponents.map(comp => {
-            const isSelected = selectedComponentId === comp.id;
+            const isSelected = selectedComponentIds.includes(comp.id);
             const isLocked = comp.locked === true;
             const isVisible = comp.visible !== false;
 
             return (
               <div
                 key={comp.id}
-                onClick={() => setSelection(comp.id)}
-                className={`flex items-center justify-between p-1 rounded cursor-pointer transition-all border ${
+                draggable={!renamingLayerId}
+                onDragStart={(e) => handleLayerDragStart(e, comp.id)}
+                onDragOver={handleLayerDragOver}
+                onDrop={(e) => handleLayerDrop(e, comp.id)}
+                onClick={(e) => {
+                  if (e.shiftKey || e.ctrlKey) {
+                    const isAlreadySelected = selectedComponentIds.includes(comp.id);
+                    let nextIds = [...selectedComponentIds];
+                    if (isAlreadySelected) {
+                      nextIds = nextIds.filter(id => id !== comp.id);
+                    } else {
+                      nextIds.push(comp.id);
+                    }
+                    setSelectionIds(nextIds);
+                  } else {
+                    setSelection(comp.id);
+                  }
+                }}
+                className={`flex items-center justify-between p-1 rounded cursor-grab active:cursor-grabbing transition-all border ${
                   isSelected 
                     ? 'bg-indigo-500/15 border-indigo-500/40 text-white font-semibold' 
                     : theme === 'dark'
                       ? 'bg-[#101726]/30 border-slate-900/40 hover:bg-slate-800/20 text-slate-300'
                       : 'bg-slate-50/50 border-slate-200/80 hover:bg-slate-100 text-slate-700'
-                }`}
+                } ${draggedLayerId === comp.id ? 'opacity-40 border-dashed border-indigo-500' : ''}`}
               >
                 {renamingLayerId === comp.id ? (
                   <div className="flex items-center gap-1 w-full" onClick={e => e.stopPropagation()}>
