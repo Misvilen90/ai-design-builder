@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { TEMPLATES_LIST } from './templatesData';
+
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -54,6 +56,14 @@ interface HistorySnapshot {
   selectedComponentId: string | null;
 }
 
+export interface SavedProject {
+  id: string;
+  name: string;
+  pages: Page[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface BuilderState {
   pages: Page[];
   activePageId: string;
@@ -64,6 +74,15 @@ interface BuilderState {
   theme: 'dark' | 'light';
   history: HistorySnapshot[];
   redoHistory: HistorySnapshot[];
+  
+  // Projects Management
+  projects: SavedProject[];
+  activeProjectId: string | null;
+  loadProject: (id: string) => void;
+  saveCurrentProject: (name?: string) => void;
+  deleteProject: (id: string) => void;
+  createNewProject: (name: string) => void;
+  updateComponentName: (id: string, name: string) => void;
   
   // Actions
   saveToHistory: () => void;
@@ -117,7 +136,7 @@ const initialPages: Page[] = [
         icon: '⚡',
         content: {
           title: 'Design at the Speed of Thought',
-          subtitle: 'Create responsive, professional websites with GenovaX AI UI Builder. Edit inline, drag elements, and publish instantly.',
+          subtitle: 'Create responsive, professional websites with GenovaX. Edit inline, drag elements, and publish instantly.',
           btnText: 'Start Building'
         },
         style: {
@@ -213,19 +232,52 @@ const initialPages: Page[] = [
   }
 ];
 
-export const useBuilderStore = create<BuilderState>((set, get) => ({
-  pages: initialPages,
-  activePageId: 'home',
-  activeMode: 'canva',
-  selectedComponentId: null,
-  zoom: 100,
-  viewport: 'desktop',
-  theme: 'dark',
-  history: [],
-  redoHistory: [],
-  rightPanelWidth: 180,
-  rightPanelCollapsed: false,
-  leftPanelExpanded: false,
+export const useBuilderStore = create<BuilderState>((set, get) => {
+  const defaultProjects: SavedProject[] = TEMPLATES_LIST.map((t, idx) => ({
+    id: t.id,
+    name: t.name,
+    createdAt: new Date(Date.now() - (4 - idx) * 24 * 3600 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - (4 - idx) * 12 * 3600 * 1000).toISOString(),
+    pages: [
+      {
+        id: 'home',
+        name: 'Home Page',
+        components: t.components
+      }
+    ]
+  }));
+
+  const getInitialProjects = (): SavedProject[] => {
+    const local = localStorage.getItem('genovax_projects_list');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.error('Failed to parse projects list from LocalStorage:', e);
+      }
+    }
+    return defaultProjects;
+  };
+
+  const initialProjs = getInitialProjects();
+
+  return {
+    pages: initialPages,
+    activePageId: 'home',
+    activeMode: 'canva',
+    selectedComponentId: null,
+    zoom: 100,
+    viewport: 'desktop',
+    theme: 'dark',
+    history: [],
+    redoHistory: [],
+    rightPanelWidth: 180,
+    rightPanelCollapsed: false,
+    leftPanelExpanded: false,
+    projects: initialProjs,
+    activeProjectId: initialProjs[0]?.id || null,
+
 
   saveToHistory: () => {
     const { pages, selectedComponentId } = get();
@@ -549,5 +601,109 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   setLeftPanelExpanded: (leftPanelExpanded) => {
     set({ leftPanelExpanded });
+  },
+
+  loadProject: (id) => {
+    const project = get().projects.find(p => p.id === id);
+    if (!project) return;
+    set({
+      pages: project.pages,
+      activePageId: project.pages[0]?.id || 'home',
+      activeProjectId: id,
+      selectedComponentId: null,
+      history: [],
+      redoHistory: []
+    });
+  },
+
+  saveCurrentProject: (name) => {
+    const { pages, activeProjectId, projects } = get();
+    const now = new Date().toISOString();
+    
+    if (activeProjectId) {
+      const updatedProjects = projects.map(p => {
+        if (p.id === activeProjectId) {
+          return {
+            ...p,
+            pages: JSON.parse(JSON.stringify(pages)),
+            updatedAt: now
+          };
+        }
+        return p;
+      });
+      set({ projects: updatedProjects });
+      localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    } else {
+      const projName = name || 'Untitled Project';
+      const newId = `project-${Date.now()}`;
+      const newProject: SavedProject = {
+        id: newId,
+        name: projName,
+        pages: JSON.parse(JSON.stringify(pages)),
+        createdAt: now,
+        updatedAt: now
+      };
+      const updatedProjects = [...projects, newProject];
+      set({
+        projects: updatedProjects,
+        activeProjectId: newId
+      });
+      localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    }
+  },
+
+  deleteProject: (id) => {
+    const updatedProjects = get().projects.filter(p => p.id !== id);
+    set({ 
+      projects: updatedProjects,
+      activeProjectId: get().activeProjectId === id ? null : get().activeProjectId
+    });
+    localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+  },
+
+  createNewProject: (name) => {
+    const now = new Date().toISOString();
+    const newId = `project-${Date.now()}`;
+    const newProject: SavedProject = {
+      id: newId,
+      name: name.trim(),
+      pages: [
+        {
+          id: 'home',
+          name: 'Home Page',
+          components: []
+        }
+      ],
+      createdAt: now,
+      updatedAt: now
+    };
+    const updatedProjects = [...get().projects, newProject];
+    set({
+      projects: updatedProjects,
+      activeProjectId: newId,
+      pages: newProject.pages,
+      activePageId: 'home',
+      selectedComponentId: null,
+      history: [],
+      redoHistory: []
+    });
+    localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+  },
+
+  updateComponentName: (id, name) => {
+    get().saveToHistory();
+    set(state => ({
+      pages: state.pages.map(page => {
+        if (page.id !== state.activePageId) return page;
+        return {
+          ...page,
+          components: page.components.map(c => 
+            c.id === id ? { ...c, name: name.trim() } : c
+          )
+        };
+      })
+    }));
   }
-}));
+};
+});
+

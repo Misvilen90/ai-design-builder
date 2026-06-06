@@ -37,13 +37,24 @@ export const Header: React.FC<HeaderProps> = ({
     undo, 
     redo,
     history,
-    redoHistory
+    redoHistory,
+    activeProjectId,
+    saveCurrentProject
   } = useBuilderStore();
 
   const activePage = pages.find(p => p.id === activePageId);
 
   const handleSave = () => {
-    alert('Project saved successfully to local workspace!');
+    if (!activeProjectId) {
+      const name = prompt('Enter a name for your new project:');
+      if (name && name.trim()) {
+        saveCurrentProject(name.trim());
+        alert(`Project "${name.trim()}" saved successfully!`);
+      }
+    } else {
+      saveCurrentProject();
+      alert('Project saved successfully!');
+    }
   };
 
   const handlePublish = () => {
@@ -71,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-2">
           <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent flex items-center gap-1.5">
             <Sparkles className="w-5 h-5 text-indigo-500 fill-indigo-500/20" />
-            AI UI Builder
+            GenovaX
           </span>
         </div>
 

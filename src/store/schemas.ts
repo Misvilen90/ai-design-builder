@@ -139,7 +139,7 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
             <span>What is GenovaX?</span>
             <span class="transition-transform group-open:rotate-180">▼</span>
           </summary>
-          <p class="text-[11px] text-textMuted-dark mt-2">GenovaX is a next-generation AI UI Builder bridging static Figma wireframes with Wix-like responsive hosting.</p>
+          <p class="text-[11px] text-textMuted-dark mt-2">GenovaX is a next-generation website editor bridging static Figma wireframes with Wix-like responsive hosting.</p>
         </details>
       </div>`
     }
@@ -353,8 +353,8 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: {
       html: `<div class="flex flex-col md:flex-row justify-between items-center h-full w-full gap-4 text-xs">
         <div class="flex flex-col gap-1">
-          <div class="font-extrabold text-white text-sm">⚡ AI UI Builder</div>
-          <div class="text-[10px] text-textMuted-dark">© 2026 AI UI Builder. All rights reserved.</div>
+          <div class="font-extrabold text-white text-sm">⚡ GenovaX</div>
+          <div class="text-[10px] text-textMuted-dark">© 2026 GenovaX. All rights reserved.</div>
         </div>
         <div class="flex gap-4 text-[10px] text-textMuted-dark font-semibold">
           <span class="hover:text-white cursor-pointer">Privacy Policy</span>

@@ -295,6 +295,14 @@ export const CanvasWorkspace: React.FC = () => {
     };
   };
 
+  const handleFitScreen = () => {
+    if (!zoomContainerRef.current) return;
+    const containerWidth = zoomContainerRef.current.clientWidth - 80;
+    const canvasWidth = viewport === 'desktop' ? 1000 : (viewport === 'tablet' ? 768 : 375);
+    const scale = (containerWidth / canvasWidth) * 100;
+    setZoom(Math.max(50, Math.min(150, Math.round(scale))));
+  };
+
   // Pixel ticks rendering for horizontal and vertical rulers
   const renderRulerTicksX = () => {
     const ticks = [];
@@ -512,26 +520,38 @@ export const CanvasWorkspace: React.FC = () => {
         theme === 'dark' ? 'bg-[#101726]/85 border-[#1e293b]' : 'bg-white border-[#e2e8f0]'
       }`}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <button 
-              onClick={() => setZoom(zoom - 10)}
-              className="px-2 py-0.5 border border-border-dark rounded hover:bg-slate-800 transition-colors"
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 font-semibold text-[10px]">Zoom:</span>
+            <select
+              value={['50', '75', '100', '125', '150'].includes(zoom.toString()) ? zoom.toString() : 'custom'}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === 'fit') {
+                  handleFitScreen();
+                } else if (val !== 'custom') {
+                  setZoom(parseInt(val));
+                }
+              }}
+              className={`text-[10px] font-bold py-0.5 px-1.5 rounded border border-border-dark outline-none bg-black/35 ${
+                theme === 'dark' ? 'text-white border-slate-800' : 'text-slate-800 border-slate-200'
+              }`}
             >
-              ➖
-            </button>
-            <span className="font-bold w-10 text-center">{zoom}%</span>
-            <button 
-              onClick={() => setZoom(zoom + 10)}
-              className="px-2 py-0.5 border border-border-dark rounded hover:bg-slate-800 transition-colors"
-            >
-              ➕
-            </button>
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="100">100%</option>
+              <option value="125">125%</option>
+              <option value="150">150%</option>
+              <option value="fit">Fit Screen</option>
+              {!['50', '75', '100', '125', '150'].includes(zoom.toString()) && (
+                <option value="custom">{zoom}%</option>
+              )}
+            </select>
           </div>
           <button 
             onClick={() => setZoom(100)}
-            className="text-[10px] text-indigo-400 font-semibold"
+            className="text-[10px] text-indigo-400 font-semibold hover:underline"
           >
-            Reset Zoom
+            100% Reset
           </button>
         </div>
 

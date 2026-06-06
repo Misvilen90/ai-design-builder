@@ -11,7 +11,8 @@ import {
   Layers, 
   History, 
   ChevronLeft,
-  Trash2
+  Trash2,
+  Edit3
 } from 'lucide-react';
 
 // Compact Custom Floating Color Swatch Component
@@ -72,8 +73,12 @@ export const RightPanel: React.FC = () => {
     setRightPanelWidth,
     setRightPanelCollapsed,
     setSelection,
-    deleteComponent
+    deleteComponent,
+    updateComponentName
   } = useBuilderStore();
+
+  const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null);
+  const [renameLayerValue, setRenameLayerValue] = useState('');
 
   const activePage = pages.find(p => p.id === activePageId);
   const selectedComponent = activePage 
@@ -234,8 +239,7 @@ export const RightPanel: React.FC = () => {
             value={comp.name}
             disabled={isLocked}
             onChange={e => {
-              useBuilderStore.getState().saveToHistory();
-              updateComponentPosition(comp.id, { name: e.target.value } as any);
+              updateComponentName(comp.id, e.target.value);
             }}
             className={`w-full text-[9px] p-1 rounded border outline-none bg-black/25 ${
               theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
@@ -632,6 +636,62 @@ export const RightPanel: React.FC = () => {
                   className="w-full cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none accent-indigo-500"
                 />
               </div>
+
+              <div className="flex flex-col gap-0.5 mt-1 border-t border-slate-800/40 pt-1.5">
+                <label className="text-slate-500">Box Shadow</label>
+                <select
+                  value={
+                    ['none', 
+                     '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+                     '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+                     '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+                     '0 0 15px rgba(99, 102, 241, 0.4)',
+                     '0 0 15px rgba(236, 72, 153, 0.4)',
+                     'inset 0 2px 4px 0 rgba(0,0,0,0.06)'
+                    ].includes(comp.style.boxShadow || 'none') ? (comp.style.boxShadow || 'none') : 'custom'
+                  }
+                  disabled={isLocked}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val !== 'custom') {
+                      updateComponentStyle(comp.id, { boxShadow: val });
+                    } else {
+                      updateComponentStyle(comp.id, { boxShadow: '0 4px 6px rgba(0,0,0,0.1)' });
+                    }
+                  }}
+                  className={`w-full text-[9px] p-0.5 rounded border outline-none bg-[#101726]/60 ${
+                    theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                  }`}
+                >
+                  <option value="none">None</option>
+                  <option value="0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)">Small</option>
+                  <option value="0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)">Medium</option>
+                  <option value="0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)">Large</option>
+                  <option value="0 0 15px rgba(99, 102, 241, 0.4)">Indigo Glow</option>
+                  <option value="0 0 15px rgba(236, 72, 153, 0.4)">Pink Glow</option>
+                  <option value="inset 0 2px 4px 0 rgba(0,0,0,0.06)">Inner Shadow</option>
+                  <option value="custom">Custom...</option>
+                </select>
+                {(comp.style.boxShadow && !['none', 
+                     '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+                     '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+                     '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+                     '0 0 15px rgba(99, 102, 241, 0.4)',
+                     '0 0 15px rgba(236, 72, 153, 0.4)',
+                     'inset 0 2px 4px 0 rgba(0,0,0,0.06)'
+                ].includes(comp.style.boxShadow)) && (
+                  <input
+                    type="text"
+                    value={comp.style.boxShadow}
+                    disabled={isLocked}
+                    onChange={e => updateComponentStyle(comp.id, { boxShadow: e.target.value })}
+                    className={`w-full text-[9px] mt-1 p-0.5 px-1 rounded border outline-none bg-black/25 ${
+                      theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                    }`}
+                    placeholder="e.g. 0 4px 6px rgba(0,0,0,0.1)"
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -680,40 +740,82 @@ export const RightPanel: React.FC = () => {
                       : 'bg-slate-50/50 border-slate-200/80 hover:bg-slate-100 text-slate-700'
                 }`}
               >
-                <div className="flex items-center gap-1 min-w-0 flex-1 select-none">
-                  <span className="text-xs shrink-0">{comp.icon}</span>
-                  <span className="truncate text-[9px] leading-none" title={comp.name}>
-                    {comp.name}
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-0.5 shrink-0 pl-1" onClick={e => e.stopPropagation()}>
-                  <button
-                    onClick={() => toggleComponentVisibility(comp.id)}
-                    className={`p-0.5 rounded hover:bg-slate-800/60 ${!isVisible ? 'text-red-400' : 'text-slate-400 hover:text-white'}`}
-                    title={isVisible ? 'Hide' : 'Show'}
-                  >
-                    {isVisible ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
-                  </button>
-                  <button
-                    onClick={() => toggleComponentLock(comp.id)}
-                    className={`p-0.5 rounded hover:bg-slate-800/60 ${isLocked ? 'text-indigo-400' : 'text-slate-400 hover:text-white'}`}
-                    title={isLocked ? 'Unlock' : 'Lock'}
-                  >
-                    {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Delete component "${comp.name}"?`)) {
-                        deleteComponent(comp.id);
-                      }
-                    }}
-                    className="p-0.5 rounded hover:bg-slate-800/60 text-slate-500 hover:text-red-400"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-2.5 h-2.5" />
-                  </button>
-                </div>
+                {renamingLayerId === comp.id ? (
+                  <div className="flex items-center gap-1 w-full" onClick={e => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      value={renameLayerValue}
+                      onChange={e => setRenameLayerValue(e.target.value)}
+                      className="bg-black/60 border border-indigo-500 rounded px-1.5 py-0.5 text-[9px] text-white flex-1 outline-none font-medium"
+                      autoFocus
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          if (renameLayerValue.trim()) {
+                            updateComponentName(comp.id, renameLayerValue.trim());
+                          }
+                          setRenamingLayerId(null);
+                        }
+                        if (e.key === 'Escape') {
+                          setRenamingLayerId(null);
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div 
+                      className="flex items-center gap-1 min-w-0 flex-1 select-none"
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        setRenamingLayerId(comp.id);
+                        setRenameLayerValue(comp.name);
+                      }}
+                    >
+                      <span className="text-xs shrink-0">{comp.icon}</span>
+                      <span className="truncate text-[9px] leading-none" title="Double click to rename">
+                        {comp.name}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-0.5 shrink-0 pl-1" onClick={e => e.stopPropagation()}>
+                      <button
+                        onClick={() => {
+                          setRenamingLayerId(comp.id);
+                          setRenameLayerValue(comp.name);
+                        }}
+                        className="p-0.5 rounded hover:bg-slate-800/60 text-slate-400 hover:text-white"
+                        title="Rename Layer"
+                      >
+                        <Edit3 className="w-2.5 h-2.5" />
+                      </button>
+                      <button
+                        onClick={() => toggleComponentVisibility(comp.id)}
+                        className={`p-0.5 rounded hover:bg-slate-800/60 ${!isVisible ? 'text-red-400' : 'text-slate-400 hover:text-white'}`}
+                        title={isVisible ? 'Hide' : 'Show'}
+                      >
+                        {isVisible ? <Eye className="w-2.5 h-2.5" /> : <EyeOff className="w-2.5 h-2.5" />}
+                      </button>
+                      <button
+                        onClick={() => toggleComponentLock(comp.id)}
+                        className={`p-0.5 rounded hover:bg-slate-800/60 ${isLocked ? 'text-indigo-400' : 'text-slate-400 hover:text-white'}`}
+                        title={isLocked ? 'Unlock' : 'Lock'}
+                      >
+                        {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete component "${comp.name}"?`)) {
+                            deleteComponent(comp.id);
+                          }
+                        }}
+                        className="p-0.5 rounded hover:bg-slate-800/60 text-slate-500 hover:text-red-400"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}
