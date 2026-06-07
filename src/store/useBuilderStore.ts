@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TEMPLATES_LIST } from './templatesData';
-
+import { getProjects } from '../services/projectApi';
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -78,6 +78,9 @@ interface BuilderState {
   // Projects Management
   projects: SavedProject[];
   activeProjectId: string | null;
+  setProjects: (projects: SavedProject[]) => void;
+setActiveProjectId: (id: string | null) => void;
+loadProjects: () => Promise<void>;
   loadProject: (id: string) => void;
   saveCurrentProject: (name?: string) => void;
   deleteProject: (id: string) => void;
@@ -277,7 +280,37 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     leftPanelExpanded: false,
     projects: initialProjs,
     activeProjectId: initialProjs[0]?.id || null,
-
+    setProjects: (projects) => {
+      set({ projects });
+    },
+    
+    setActiveProjectId: (id) => {
+      set({ activeProjectId: id });
+    },
+    loadProjects: async () => {
+      try {
+        const response = await getProjects();
+    
+        const mongoProjects = response.data;
+    
+        const projects = mongoProjects.map((project: any) => ({
+          id: project._id,
+          name: project.projectName,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          pages: []
+        }));
+    
+        set({
+          projects,
+          activeProjectId: projects[0]?.id || null,
+        });
+    
+        console.log('Mapped Projects:', projects);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      }
+    },
 
   saveToHistory: () => {
     const { pages, selectedComponentId } = get();
