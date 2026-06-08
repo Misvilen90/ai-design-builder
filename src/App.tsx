@@ -9,7 +9,12 @@ import { AIPromptPopup } from './components/AIPromptPopup';
 import { ExportModal } from './components/ExportModal';
 import { TemplatesModal } from './components/TemplatesModal';
 import { TEMPLATES_LIST } from './store/templatesData';
-import { createProject } from './services/projectApi';
+import {
+  createProject,
+  createVersion,
+  getVersions,
+  restoreVersion
+} from './services/projectApi';
 import{
   Sparkles, 
   Layers, 
@@ -42,7 +47,7 @@ const App: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  
+  const [versions, setVersions] = useState<any[]>([]);
   // Custom View State: 'dashboard' | 'builder' | 'templates' | 'projects' | 'settings'
   const [currentView, setCurrentView] = useState('builder');
   // Canvas AI loading spinner state
@@ -53,7 +58,7 @@ const App: React.FC = () => {
   useEffect(() => {
     loadProjects();
   }, []);
-
+ 
   // Global listeners for events dispatched from sidebar icons
   useEffect(() => {
     const handleOpenTemplates = () => setTemplatesOpen(true);
@@ -129,7 +134,15 @@ const App: React.FC = () => {
   useEffect(() => {
     let timeoutId: any;
     const interval = setInterval(() => {
-      const { pages, activePageId } = useBuilderStore.getState();
+      const {
+        pages,
+        activePageId,
+        activeProjectId,
+        saveCurrentProject
+      } = useBuilderStore.getState();
+      if (activeProjectId) {
+        saveCurrentProject();
+      }
       localStorage.setItem('genovax_builder_pages', JSON.stringify(pages));
       localStorage.setItem('genovax_builder_active_page', activePageId);
 
@@ -351,6 +364,7 @@ const App: React.FC = () => {
                       >
                         Open Project
                       </button>
+                  
                       <button
                         onClick={() => {
                           if (confirm(`Are you sure you want to delete "${project.name}"?`)) {
