@@ -201,10 +201,25 @@ export const RightPanel: React.FC = () => {
             Select an element on canvas to configure.
           </p>
         </div>
+        
       );
-    }
+      return (
+  <div className="space-y-2 p-2">
+    <div>
+      <label className="text-[10px] text-slate-400">Name</label>
+      <input
+        className="w-full text-[10px] p-1 bg-slate-800 text-white rounded"
+        value={selectedComponent.name}
+        onChange={(e) =>
+          updateComponentName(selectedComponent.id, e.target.value)
+        }
+      />
+    </div>
 
-    return (
+  </div>
+);
+};
+   return (
       <div className="space-y-1">
         {renderAccordionSection('settings', '⚙️ Settings', renderSettingsContent)}
         {renderAccordionSection('layout', '📐 Layout', renderLayoutContent)}

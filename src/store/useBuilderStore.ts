@@ -54,6 +54,7 @@ export interface Page {
 interface HistorySnapshot {
   pages: Page[];
   selectedComponentId: string | null;
+  activePageId: string;
 }
 
 export interface SavedProject {
@@ -335,13 +336,18 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
 
 
   saveToHistory: () => {
-    const { pages, selectedComponentId } = get();
-    // Deep clone pages
-    const pagesClone = JSON.parse(JSON.stringify(pages));
-    set((state) => ({
-      history: [...state.history, { pages: pagesClone, selectedComponentId }],
-      redoHistory: [] // Clear redo stack on new action
-    }));
+    const { pages, selectedComponentId, activePageId } = get();
+
+const snapshot: HistorySnapshot = {
+  pages: JSON.parse(JSON.stringify(pages)),
+  selectedComponentId,
+  activePageId,
+};
+
+set((state) => ({
+  history: [...state.history, snapshot],
+  redoHistory: [],
+}));
   },
 
   undo: () => {
@@ -355,6 +361,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     const currentClone = JSON.parse(JSON.stringify(pages));
     
     set({
+      activePageId: prevSnapshot.activePageId,
       pages: prevSnapshot.pages,
       selectedComponentId: prevSnapshot.selectedComponentId,
       history: newHistory,
@@ -373,6 +380,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     const currentClone = JSON.parse(JSON.stringify(pages));
     
     set({
+      activePageId: nextSnapshot.activePageId,
       pages: nextSnapshot.pages,
       selectedComponentId: nextSnapshot.selectedComponentId,
       redoHistory: newRedoHistory,
@@ -450,9 +458,13 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     set({ pages });
   },
 
-  setActivePageId: (activePageId) => {
-    set({ activePageId, selectedComponentId: null });
-  },
+  setActivePageId: (id) => {
+  set({
+    activePageId: id,
+    selectedComponentId: null,
+    selectedComponentIds: [],
+  });
+},
 
   addComponent: (schema) => {
     get().saveToHistory();
