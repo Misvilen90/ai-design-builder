@@ -307,7 +307,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     snapToGrid: true,
     projects: initialProjs,
     activeProjectId: initialProjs[0]?.id || null,
-    leftPanelTab: 'components',
+    leftPanelTab: 'media',
     globalTheme: {
       primaryColor: '#6366f1',
       secondaryColor: '#475569',

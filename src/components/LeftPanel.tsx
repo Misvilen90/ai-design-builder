@@ -1,31 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBuilderStore } from '../store/useBuilderStore';
-import { COMPONENT_SCHEMAS, ComponentSchema } from '../store/schemas';
+import { COMPONENT_SCHEMAS } from '../store/schemas';
+import { useAIStore } from '../store/useAIStore';
+import { testProviderConnection } from '../services/ai/aiRouter';
 import { 
   Search, 
-  ChevronDown, 
   ChevronRight, 
   ChevronLeft,
-  Layout, 
-  Compass, 
   FileText, 
   Image as ImageIcon, 
-  Square, 
-  CreditCard, 
-  Clipboard, 
-  Briefcase, 
-  Sparkles, 
-  ShoppingCart, 
-  AlignJustify,
-  Layers,
-  Paintbrush,
-  Settings,
-  Plus,
-  Trash2,
-  Copy,
-  Edit3,
-  Check,
-  UploadCloud
+  Paintbrush, 
+  Settings, 
+  Plus, 
+  Trash2, 
+  Copy, 
+  Edit3, 
+  Check, 
+  UploadCloud,
+  Eye,
+  EyeOff,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  RefreshCw
 } from 'lucide-react';
 
 // Color picker row helper
@@ -97,8 +94,6 @@ export const LeftPanel: React.FC = () => {
   } = useBuilderStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>('Layout');
-  
   // Page renaming states
   const [renamingPageId, setRenamingPageId] = useState<string | null>(null);
   const [renamePageValue, setRenamePageValue] = useState('');
@@ -107,73 +102,14 @@ export const LeftPanel: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  const categories = [
-    'Layout',
-    'Navigation',
-    'Content',
-    'Media',
-    'Buttons',
-    'Cards',
-    'Forms',
-    'Business',
-    'Marketing',
-    'E-Commerce',
-    'Footer'
-  ];
+  // AI Configuration — from Zustand store
+  const aiStore = useAIStore();
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showGroqKey, setShowGroqKey] = useState(false);
+  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [testMessage, setTestMessage] = useState('');
 
-  const categoryIconMap: Record<string, React.ReactNode> = {
-    'Layout': <Layout className="w-3 h-3 text-indigo-400" />,
-    'Navigation': <Compass className="w-3 h-3 text-sky-400" />,
-    'Content': <FileText className="w-3 h-3 text-emerald-400" />,
-    'Media': <ImageIcon className="w-3 h-3 text-amber-400" />,
-    'Buttons': <Square className="w-3 h-3 text-rose-400" />,
-    'Cards': <CreditCard className="w-3 h-3 text-pink-400" />,
-    'Forms': <Clipboard className="w-3 h-3 text-violet-400" />,
-    'Business': <Briefcase className="w-3 h-3 text-teal-400" />,
-    'Marketing': <Sparkles className="w-3 h-3 text-yellow-400" />,
-    'E-Commerce': <ShoppingCart className="w-3 h-3 text-purple-400" />,
-    'Footer': <AlignJustify className="w-3 h-3 text-slate-400" />
-  };
-
-  // 1. Components tab handlers
-  const handleComponentClick = (schema: ComponentSchema) => {
-    addComponent({
-      type: schema.type,
-      name: schema.name,
-      category: schema.category,
-      icon: schema.icon,
-      content: { ...schema.defaultContent },
-      style: { ...schema.defaultStyle },
-      position: {
-        left: 100 + Math.random() * 40,
-        top: 150 + Math.random() * 40,
-        width: schema.defaultPosition.width,
-        height: schema.defaultPosition.height,
-        rotate: 0,
-        zIndex: 10
-      }
-    });
-    setLeftPanelExpanded(false);
-  };
-
-  const handleComponentDragStart = (e: React.DragEvent, type: string) => {
-    e.dataTransfer.setData('text/plain', type);
-    e.dataTransfer.effectAllowed = 'copy';
-    setTimeout(() => setLeftPanelExpanded(false), 200);
-  };
-
-  const getFilteredSchemas = (category: string) => {
-    return Object.values(COMPONENT_SCHEMAS).filter(schema => {
-      if (schema.category.toLowerCase() !== category.toLowerCase()) return false;
-      if (searchQuery.trim() && leftPanelTab === 'components') {
-        return (
-          schema.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          schema.type.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      return true;
-    });
-  };
 
   // 2. Media tab handlers
   const handleMediaDragStart = (e: React.DragEvent, type: 'image' | 'video', url: string) => {
@@ -349,13 +285,7 @@ export const LeftPanel: React.FC = () => {
     setRenamingPageId(null);
   };
 
-  // Expand accordion automatically on search matching
-  useEffect(() => {
-    if (searchQuery.trim() && leftPanelTab === 'components') {
-      const match = categories.find(cat => getFilteredSchemas(cat).length > 0);
-      if (match) setActiveCategory(match);
-    }
-  }, [searchQuery, leftPanelTab]);
+
 
   // Click outside to collapse components drawer
   useEffect(() => {
@@ -401,17 +331,6 @@ export const LeftPanel: React.FC = () => {
 
         {/* System Drawer Tabs */}
         <div className="flex flex-col gap-2 px-1">
-          <button
-            onClick={() => handleTabToggle('components')}
-            className={`p-2 rounded-lg transition-all ${
-              leftPanelTab === 'components' && leftPanelExpanded
-                ? 'bg-indigo-600 text-white shadow shadow-indigo-600/35'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850/40'
-            }`}
-            title="Component Library"
-          >
-            <Layers className="w-4 h-4" />
-          </button>
           <button
             onClick={() => handleTabToggle('media')}
             className={`p-2 rounded-lg transition-all ${
@@ -463,10 +382,11 @@ export const LeftPanel: React.FC = () => {
       <aside 
         ref={drawerRef}
         style={{
-          transform: leftPanelExpanded ? 'translateX(0)' : 'translateX(-260px)',
-          transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)'
+          transform: leftPanelExpanded ? 'translateX(0)' : 'translateX(-500px)',
+          transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: leftPanelExpanded ? 'auto' : 'none'
         }}
-        className="left-panel-container w-[210px] h-full flex flex-col border-r z-30 fixed top-14 left-[40px] select-none shadow-2xl bg-[#101726]/90 border-[#1e293b] text-[#f1f5f9] backdrop-blur-xl"
+        className="left-panel-container w-[210px] h-full flex flex-col border-r z-30 fixed top-14 left-[250px] select-none shadow-2xl bg-[#101726]/90 border-[#1e293b] text-[#f1f5f9] backdrop-blur-xl"
       >
         {/* Drawer Header */}
         <div className="p-3 border-b border-slate-850 flex items-center justify-between">
@@ -486,69 +406,6 @@ export const LeftPanel: React.FC = () => {
         </div>
 
         {/* TAB CONTENTS */}
-        
-        {/* TAB 1: COMPONENTS */}
-        {leftPanelTab === 'components' && (
-          <>
-            <div className="p-2 border-b border-slate-850/60">
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded border border-[#1e293b] text-xs bg-[#090d16]/65">
-                <Search className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Search components..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none text-xs w-full text-slate-300 placeholder:text-slate-505"
-                />
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-1.5 space-y-1 pb-20">
-              {categories.map(cat => {
-                const schemas = getFilteredSchemas(cat);
-                if (schemas.length === 0) return null;
-                const isOpen = searchQuery ? true : activeCategory === cat;
-
-                return (
-                  <div key={cat} className="border border-slate-800/80 bg-black/10 rounded overflow-hidden">
-                    <button
-                      onClick={() => setActiveCategory(isOpen ? null : cat)}
-                      className="w-full flex items-center justify-between px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider bg-slate-800/25 hover:bg-slate-800/50 text-slate-400"
-                    >
-                      <span className="flex items-center gap-1">
-                        {categoryIconMap[cat]}
-                        <span>{cat}</span>
-                        <span className="text-[8px] opacity-40 font-mono">({schemas.length})</span>
-                      </span>
-                      {isOpen ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronRight className="w-2.5 h-2.5" />}
-                    </button>
-
-                    {isOpen && (
-                      <div className="grid grid-cols-2 gap-1 p-1 bg-black/15">
-                        {schemas.map(schema => (
-                          <div
-                            key={schema.type}
-                            onClick={() => handleComponentClick(schema)}
-                            draggable
-                            onDragStart={(e) => handleComponentDragStart(e, schema.type)}
-                            className="group flex flex-col items-center justify-center p-1 rounded border border-slate-850 text-center aspect-[1.1] cursor-grab active:cursor-grabbing hover:border-indigo-500 transition-all bg-[#101726]/40 hover:bg-slate-850/20"
-                          >
-                            <span className="text-sm group-hover:scale-110 mb-0.5 transition-transform">
-                              {schema.icon}
-                            </span>
-                            <span className="text-[8px] leading-tight font-medium text-slate-300 truncate w-full px-0.5">
-                              {schema.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
 
         {/* TAB 2: MEDIA LIBRARY */}
         {leftPanelTab === 'media' && (
@@ -910,6 +767,157 @@ export const LeftPanel: React.FC = () => {
                   Reset (100%)
                 </button>
               </div>
+            </div>
+
+            {/* AI Configuration Section */}
+            <div className="space-y-2 border-t border-slate-850 pt-3">
+              <span className="text-slate-500 uppercase tracking-widest font-extrabold text-[8px] flex items-center gap-1">
+                <Zap className="w-3 h-3 text-indigo-400" />
+                AI Configuration
+              </span>
+
+              {/* Provider Selector */}
+              <div className="flex flex-col gap-1">
+                <label className="text-slate-500 text-[9px]">AI Provider</label>
+                <select
+                  value={aiStore.provider}
+                  onChange={e => {
+                    aiStore.setProvider(e.target.value as any);
+                    setTestStatus('idle');
+                  }}
+                  className="w-full p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px]"
+                >
+                  <option value="auto">Auto (Failover)</option>
+                  <option value="gemini">Gemini</option>
+                  <option value="groq">Groq</option>
+                  <option value="openrouter">OpenRouter</option>
+                </select>
+              </div>
+
+              {/* Gemini Key */}
+              <div className="flex flex-col gap-1">
+                <label className="text-slate-500 text-[9px]">Gemini API Key</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type={showGeminiKey ? 'text' : 'password'}
+                    value={aiStore.geminiApiKey}
+                    onChange={e => {
+                      aiStore.setGeminiApiKey(e.target.value);
+                      setTestStatus('idle');
+                    }}
+                    placeholder="AIza..."
+                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
+                  />
+                  <button
+                    onClick={() => setShowGeminiKey(!showGeminiKey)}
+                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                  >
+                    {showGeminiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  </button>
+                </div>
+                <select
+                  value={aiStore.geminiModel}
+                  onChange={e => aiStore.setGeminiModel(e.target.value)}
+                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
+                >
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Quality)</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                </select>
+              </div>
+
+              {/* Groq Key */}
+              <div className="flex flex-col gap-1">
+                <label className="text-slate-500 text-[9px]">Groq API Key</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type={showGroqKey ? 'text' : 'password'}
+                    value={aiStore.groqApiKey}
+                    onChange={e => {
+                      aiStore.setGroqApiKey(e.target.value);
+                      setTestStatus('idle');
+                    }}
+                    placeholder="gsk_..."
+                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
+                  />
+                  <button
+                    onClick={() => setShowGroqKey(!showGroqKey)}
+                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                  >
+                    {showGroqKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  </button>
+                </div>
+                <select
+                  value={aiStore.groqModel}
+                  onChange={e => aiStore.setGroqModel(e.target.value)}
+                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
+                >
+                  <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B (Fast)</option>
+                  <option value="llama-3.1-8b-instant">LLaMA 3.1 8B (Instant)</option>
+                  <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                </select>
+              </div>
+
+              {/* OpenRouter Key */}
+              <div className="flex flex-col gap-1">
+                <label className="text-slate-500 text-[9px]">OpenRouter API Key</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type={showOpenRouterKey ? 'text' : 'password'}
+                    value={aiStore.openRouterApiKey}
+                    onChange={e => {
+                      aiStore.setOpenRouterApiKey(e.target.value);
+                      setTestStatus('idle');
+                    }}
+                    placeholder="sk-or-..."
+                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
+                  />
+                  <button
+                    onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
+                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                  >
+                    {showOpenRouterKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  </button>
+                </div>
+                <select
+                  value={aiStore.openRouterModel}
+                  onChange={e => aiStore.setOpenRouterModel(e.target.value)}
+                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
+                >
+                  <option value="meta-llama/llama-3.3-70b-instruct">LLaMA 3.3 70B</option>
+                  <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
+                  <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
+                </select>
+              </div>
+
+              {/* Test Connection */}
+              <button
+                onClick={async () => {
+                  setTestStatus('testing');
+                  setTestMessage('');
+                  const providerToTest = aiStore.provider === 'auto' ? 'gemini' : aiStore.provider;
+                  const result = await testProviderConnection(providerToTest);
+                  setTestStatus(result.success ? 'success' : 'error');
+                  setTestMessage(result.message);
+                }}
+                disabled={testStatus === 'testing'}
+                className="w-full py-1.5 rounded border border-indigo-500/30 text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 font-bold flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                {testStatus === 'testing' ? (
+                  <><RefreshCw className="w-3 h-3 animate-spin" /> Testing...</>
+                ) : testStatus === 'success' ? (
+                  <><CheckCircle2 className="w-3 h-3 text-green-400" /> Connected!</>
+                ) : testStatus === 'error' ? (
+                  <><XCircle className="w-3 h-3 text-red-400" /> Failed — Retry</>
+                ) : (
+                  <><Zap className="w-3 h-3" /> Test Connection</>
+                )}
+              </button>
+              {testMessage && (
+                <p className={`text-[8px] leading-relaxed px-1 ${testStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {testMessage}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2 border-t border-slate-850 pt-3">

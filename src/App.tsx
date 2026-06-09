@@ -200,8 +200,6 @@ const App: React.FC = () => {
             useBuilderStore.getState().setLeftPanelExpanded(true);
           } else if (view === 'components') {
             setCurrentView('builder');
-            useBuilderStore.getState().setLeftPanelTab('components');
-            useBuilderStore.getState().setLeftPanelExpanded(true);
           } else if (view === 'media') {
             setCurrentView('builder');
             useBuilderStore.getState().setLeftPanelTab('media');
