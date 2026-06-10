@@ -9,7 +9,13 @@ import { AIPromptPopup } from './components/AIPromptPopup';
 import { ExportModal } from './components/ExportModal';
 import { TemplatesModal } from './components/TemplatesModal';
 import { TEMPLATES_LIST } from './store/templatesData';
-import { 
+import {
+  createProject,
+  createVersion,
+  getVersions,
+  restoreVersion
+} from './services/projectApi';
+import{
   Sparkles, 
   Layers, 
   ArrowRight, 
@@ -26,7 +32,10 @@ const App: React.FC = () => {
     theme, 
     projects,
     activeProjectId,
+    setProjects,
+    setActiveProjectId,
     loadProject,
+    loadProjects,
     deleteProject,
     createNewProject,
     pages,
@@ -37,16 +46,18 @@ const App: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  
+  const [versions, setVersions] = useState<any[]>([]);
   // Custom View State: 'dashboard' | 'builder' | 'templates' | 'projects' | 'settings'
   const [currentView, setCurrentView] = useState('builder');
-  
   // Canvas AI loading spinner state
   const [showLoading, setShowLoading] = useState(false);
   
   // Autosaved notification status
   const [showAutoSaved, setShowAutoSaved] = useState(false);
-
+  useEffect(() => {
+    loadProjects();
+  }, []);
+ 
   // Global listeners for events dispatched from sidebar icons
   useEffect(() => {
     const handleOpenTemplates = () => setTemplatesOpen(true);
@@ -122,7 +133,15 @@ const App: React.FC = () => {
   useEffect(() => {
     let timeoutId: any;
     const interval = setInterval(() => {
-      const { pages, activePageId } = useBuilderStore.getState();
+      const {
+        pages,
+        activePageId,
+        activeProjectId,
+        saveCurrentProject
+      } = useBuilderStore.getState();
+      if (activeProjectId) {
+        saveCurrentProject();
+      }
       localStorage.setItem('genovax_builder_pages', JSON.stringify(pages));
       localStorage.setItem('genovax_builder_active_page', activePageId);
 
@@ -302,11 +321,20 @@ const App: React.FC = () => {
                 <h1 className="text-3xl font-black text-white leading-tight">My Saved Projects</h1>
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
                   const name = prompt('Enter a name for the new project:');
-                  if (name && name.trim()) {
-                    createNewProject(name.trim());
-                    setCurrentView('builder');
+                
+                  if (!name || !name.trim()) return;
+                
+                  try {
+                    await createProject(name.trim());
+                
+                    await loadProjects();
+                
+                    alert('Project created successfully');
+                  } catch (error) {
+                    console.error('Create project failed:', error);
+                    alert('Failed to create project');
                   }
                 }}
                 className="bg-indigo-600 hover:bg-indigo-500 text-xs font-bold py-2 px-5 rounded-md text-white flex items-center gap-1.5 shadow-sm"
@@ -354,6 +382,7 @@ const App: React.FC = () => {
                       >
                         Open Project
                       </button>
+                  
                       <button
                         onClick={() => {
                           if (confirm(`Are you sure you want to delete "${project.name}"?`)) {

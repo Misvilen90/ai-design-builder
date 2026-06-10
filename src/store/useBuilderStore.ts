@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TEMPLATES_LIST } from './templatesData';
-
+import { getProjects, updateCanvas, getCanvas } from '../services/projectApi';
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -78,7 +78,10 @@ interface BuilderState {
   // Projects Management
   projects: SavedProject[];
   activeProjectId: string | null;
-  loadProject: (id: string) => void;
+  setProjects: (projects: SavedProject[]) => void;
+setActiveProjectId: (id: string | null) => void;
+loadProjects: () => Promise<void>;
+loadProject: (id: string) => Promise<void>;
   saveCurrentProject: (name?: string) => void;
   deleteProject: (id: string) => void;
   createNewProject: (name: string) => void;
@@ -307,6 +310,37 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     snapToGrid: true,
     projects: initialProjs,
     activeProjectId: initialProjs[0]?.id || null,
+    setProjects: (projects) => {
+      set({ projects });
+    },
+    
+    setActiveProjectId: (id) => {
+      set({ activeProjectId: id });
+    },
+    loadProjects: async () => {
+      try {
+        const response = await getProjects();
+    
+        const mongoProjects = response.data;
+    
+        const projects = mongoProjects.map((project: any) => ({
+          id: project._id,
+          name: project.projectName,
+          createdAt: project.createdAt,
+          updatedAt: project.updatedAt,
+          pages: []
+        }));
+    
+        set({
+          projects,
+          activeProjectId: projects[0]?.id || null,
+        });
+    
+        console.log('Mapped Projects:', projects);
+      } catch (error) {
+        console.error('Failed to load projects:', error);
+      }
+    },
     leftPanelTab: 'media',
     globalTheme: {
       primaryColor: '#6366f1',
@@ -717,24 +751,43 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     set({ leftPanelExpanded });
   },
 
-  loadProject: (id) => {
-    const project = get().projects.find(p => p.id === id);
-    if (!project) return;
-    set({
-      pages: project.pages,
-      activePageId: project.pages[0]?.id || 'home',
-      activeProjectId: id,
-      selectedComponentId: null,
-      history: [],
-      redoHistory: []
-    });
+  loadProject: async (id) => {
+    try {
+      const response = await getCanvas(id);
+  
+      const canvasData = response.data?.canvasData;
+  
+      set({
+        pages: canvasData?.pages || [],
+        activePageId: canvasData?.pages?.[0]?.id || 'home',
+        activeProjectId: id,
+        selectedComponentId: null,
+        history: [],
+        redoHistory: []
+      });
+  
+      console.log('Canvas loaded from MongoDB');
+    } catch (error) {
+      console.error('Failed to load canvas:', error);
+    }
   },
 
-  saveCurrentProject: (name) => {
+  saveCurrentProject: async(name) => {
     const { pages, activeProjectId, projects } = get();
     const now = new Date().toISOString();
     
     if (activeProjectId) {
+
+      try {
+        await updateCanvas(activeProjectId, {
+          pages
+        });
+    
+        console.log('Canvas saved to MongoDB');
+      } catch (error) {
+        console.error('MongoDB canvas save failed:', error);
+      }
+    
       const updatedProjects = projects.map(p => {
         if (p.id === activeProjectId) {
           return {
