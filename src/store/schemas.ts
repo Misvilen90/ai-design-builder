@@ -12,7 +12,9 @@ export interface ComponentSchema {
 }
 
 export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
+  // ==========================================
   // 1. LAYOUT
+  // ==========================================
   'layout-container': {
     type: 'layout-container',
     name: 'Container',
@@ -27,7 +29,7 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       borderRadius: '8px',
       padding: '16px'
     },
-    defaultContent: { html: '<div class="text-textMuted-dark text-xs flex justify-center items-center h-full">💡 Grid Container. Drop components here.</div>' }
+    defaultContent: { html: '<div class="text-slate-500 text-xs flex justify-center items-center h-full">💡 Grid Container. Drop components here.</div>' }
   },
   'layout-section': {
     type: 'layout-section',
@@ -43,11 +45,11 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       borderRadius: '12px',
       padding: '40px 24px'
     },
-    defaultContent: { html: '<div class="text-textMuted-dark text-xs text-center">Section Box</div>' }
+    defaultContent: { html: '<div class="text-slate-400 text-xs text-center">Section Box Layout</div>' }
   },
   'layout-grid': {
     type: 'layout-grid',
-    name: 'Grid Columns',
+    name: 'Grid',
     category: 'Layout',
     icon: '🎛️',
     defaultPosition: { width: 900, height: 160 },
@@ -57,16 +59,55 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: {
       html: `<div class="grid grid-cols-3 gap-4 h-full w-full">
-        <div class="border border-dashed border-border-dark bg-card-dark/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-textMuted-dark">Col 1</div>
-        <div class="border border-dashed border-border-dark bg-card-dark/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-textMuted-dark">Col 2</div>
-        <div class="border border-dashed border-border-dark bg-card-dark/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-textMuted-dark">Col 3</div>
+        <div class="border border-dashed border-slate-800 bg-slate-950/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-slate-500">Col 1</div>
+        <div class="border border-dashed border-slate-800 bg-slate-950/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-slate-500">Col 2</div>
+        <div class="border border-dashed border-slate-800 bg-slate-950/20 rounded-md p-4 flex flex-col justify-center items-center text-xs text-slate-500">Col 3</div>
       </div>`
     }
   },
+  'layout-row': {
+    type: 'layout-row',
+    name: 'Row',
+    category: 'Layout',
+    icon: '↔️',
+    defaultPosition: { width: 900, height: 100 },
+    defaultStyle: {
+      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+      borderColor: '#334155',
+      borderStyle: 'dashed',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '8px 16px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full">
+        <div class="text-[10px] text-slate-500 font-mono">Row Start</div>
+        <div class="text-[10px] text-slate-500 font-mono">Row End</div>
+      </div>`
+    }
+  },
+  'layout-column': {
+    type: 'layout-column',
+    name: 'Column',
+    category: 'Layout',
+    icon: '↕️',
+    defaultPosition: { width: 280, height: 160 },
+    defaultStyle: {
+      backgroundColor: 'rgba(255, 255, 255, 0.01)',
+      borderColor: '#334155',
+      borderStyle: 'dashed',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '12px'
+    },
+    defaultContent: { html: '<div class="text-[10px] text-slate-500 h-full flex items-center justify-center">Column element</div>' }
+  },
 
+  // ==========================================
   // 2. NAVIGATION
-  'nav-bar': {
-    type: 'nav-bar',
+  // ==========================================
+  'nav-navbar': {
+    type: 'nav-navbar',
     name: 'Navbar',
     category: 'Navigation',
     icon: '🌐',
@@ -82,17 +123,104 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: {
       html: `<div class="flex justify-between items-center h-full w-full">
         <div class="font-extrabold text-sm text-indigo-400">⚡ GENOVAX</div>
-        <div class="flex gap-4 text-xs font-semibold text-textMuted-dark">
+        <div class="flex gap-4 text-xs font-semibold text-slate-400">
           <span class="hover:text-white cursor-pointer">Product</span>
           <span class="hover:text-white cursor-pointer">Templates</span>
           <span class="hover:text-white cursor-pointer">Pricing</span>
         </div>
-        <button class="bg-indigo-600 text-[10px] font-bold px-3 py-1 rounded-md text-white">Sign In</button>
+        <button class="bg-indigo-650 text-[10px] font-bold px-3 py-1 rounded text-white">Sign In</button>
+      </div>`
+    }
+  },
+  'nav-sidebar': {
+    type: 'nav-sidebar',
+    name: 'Sidebar',
+    category: 'Navigation',
+    icon: '🗂️',
+    defaultPosition: { width: 200, height: 400 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.8)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '16px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col gap-4 h-full">
+        <div class="font-extrabold text-xs text-indigo-400">⚡ DASHBOARD</div>
+        <ul class="flex flex-col gap-2.5 text-[10px] text-slate-400 font-semibold">
+          <li class="text-white hover:text-white cursor-pointer">🏠 Home Overview</li>
+          <li class="hover:text-white cursor-pointer">📊 Analytics Metrics</li>
+          <li class="hover:text-white cursor-pointer">👤 Users List</li>
+          <li class="hover:text-white cursor-pointer">⚙️ Settings Options</li>
+        </ul>
+      </div>`
+    }
+  },
+  'nav-breadcrumb': {
+    type: 'nav-breadcrumb',
+    name: 'Breadcrumb',
+    category: 'Navigation',
+    icon: '🪧',
+    defaultPosition: { width: 400, height: 40 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '8px 12px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+        <span class="hover:text-slate-300 cursor-pointer">Home</span>
+        <span>/</span>
+        <span class="hover:text-slate-300 cursor-pointer">Dashboard</span>
+        <span>/</span>
+        <span class="text-indigo-400">Builder</span>
+      </div>`
+    }
+  },
+  'nav-menu': {
+    type: 'nav-menu',
+    name: 'Menu',
+    category: 'Navigation',
+    icon: '🍔',
+    defaultPosition: { width: 300, height: 50 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.5)',
+      borderRadius: '6px',
+      padding: '8px 12px'
+    },
+    defaultContent: {
+      html: `<div class="flex gap-4 items-center justify-around h-full w-full text-xs font-semibold text-slate-300">
+        <span class="hover:text-indigo-400 cursor-pointer">Home</span>
+        <span class="hover:text-indigo-400 cursor-pointer">Services</span>
+        <span class="hover:text-indigo-400 cursor-pointer">Blog</span>
+        <span class="hover:text-indigo-400 cursor-pointer">Contact</span>
+      </div>`
+    }
+  },
+  'nav-tabs': {
+    type: 'nav-tabs',
+    name: 'Tabs',
+    category: 'Navigation',
+    icon: '🗂️',
+    defaultPosition: { width: 450, height: 60 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderRadius: '8px',
+      padding: '6px'
+    },
+    defaultContent: {
+      html: `<div class="flex gap-2 w-full h-full text-xs font-bold text-center">
+        <button class="flex-1 bg-indigo-600 text-white rounded-md py-2">Tab 1</button>
+        <button class="flex-1 text-slate-400 hover:text-slate-200 py-2">Tab 2</button>
+        <button class="flex-1 text-slate-400 hover:text-slate-200 py-2">Tab 3</button>
       </div>`
     }
   },
 
+  // ==========================================
   // 3. CONTENT
+  // ==========================================
   'content-heading': {
     type: 'content-heading',
     name: 'Heading',
@@ -105,7 +233,7 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       fontWeight: '800',
       textAlign: 'left'
     },
-    defaultContent: { text: 'Premium SaaS Dashboard UI' }
+    defaultContent: { text: 'Premium SaaS UI Editor' }
   },
   'content-paragraph': {
     type: 'content-paragraph',
@@ -122,33 +250,83 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: { text: 'Create responsive, professional layouts in seconds with drag-and-drop components, customized typography, and custom borders.' }
   },
-  'content-accordion': {
-    type: 'content-accordion',
-    name: 'Accordion',
+  'content-textblock': {
+    type: 'content-textblock',
+    name: 'Text Block',
     category: 'Content',
-    icon: '📂',
-    defaultPosition: { width: 600, height: 130 },
+    icon: '📋',
+    defaultPosition: { width: 600, height: 80 },
+    defaultStyle: {
+      color: '#cbd5e1',
+      fontSize: '15px',
+      textAlign: 'left'
+    },
+    defaultContent: { text: 'This is a text block. Click or double click to edit, format typography, change weights, or set borders.' }
+  },
+  'content-list': {
+    type: 'content-list',
+    name: 'List',
+    category: 'Content',
+    icon: '🔢',
+    defaultPosition: { width: 300, height: 120 },
     defaultStyle: {
       backgroundColor: 'transparent',
       padding: '8px'
     },
     defaultContent: {
-      html: `<div class="w-full flex flex-col gap-2">
-        <details class="bg-card-dark/40 border border-border-dark rounded-md p-3 group" open>
-          <summary class="text-xs font-semibold cursor-pointer select-none text-textMain-dark flex justify-between items-center list-none">
-            <span>What is GenovaX?</span>
-            <span class="transition-transform group-open:rotate-180">▼</span>
-          </summary>
-          <p class="text-[11px] text-textMuted-dark mt-2">GenovaX is a next-generation website editor bridging static Figma wireframes with Wix-like responsive hosting.</p>
-        </details>
-      </div>`
+      html: `<ul class="list-disc list-inside text-xs text-slate-300 space-y-1.5 font-medium">
+        <li>✨ Fully Absolute Positioned Canvas</li>
+        <li>⚡ Auto Alignment Snaps & Guides</li>
+        <li>📁 Local Project Storage & Autosave</li>
+        <li>🚀 Tailwind & Code Code Exports</li>
+      </ul>`
+    }
+  },
+  'content-table': {
+    type: 'content-table',
+    name: 'Table',
+    category: 'Content',
+    icon: '📊',
+    defaultPosition: { width: 600, height: 180 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '12px'
+    },
+    defaultContent: {
+      html: `<table class="w-full text-left text-xs border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400 font-bold">
+            <th class="pb-2">Feature</th>
+            <th class="pb-2">Status</th>
+            <th class="pb-2">Version</th>
+          </tr>
+        </thead>
+        <tbody class="text-slate-300 font-medium">
+          <tr class="border-b border-slate-800/40">
+            <td class="py-2.5">Canvas Drag & Drop</td>
+            <td class="py-2.5 text-emerald-400">✔️ Ready</td>
+            <td class="py-2.5">v2.1</td>
+          </tr>
+          <tr>
+            <td class="py-2.5">Undo & Redo System</td>
+            <td class="py-2.5 text-emerald-400">✔️ Active</td>
+            <td class="py-2.5">v1.0</td>
+          </tr>
+        </tbody>
+      </table>`
     }
   },
 
+  // ==========================================
   // 4. MEDIA
+  // ==========================================
   'media-image': {
     type: 'media-image',
-    name: 'Image Box',
+    name: 'Image',
     category: 'Media',
     icon: '🖼️',
     defaultPosition: { width: 320, height: 200 },
@@ -163,8 +341,74 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       alt: 'Dashboard Mockup'
     }
   },
+  'media-video': {
+    type: 'media-video',
+    name: 'Video',
+    category: 'Media',
+    icon: '🎥',
+    defaultPosition: { width: 400, height: 225 },
+    defaultStyle: {
+      backgroundColor: '#020617',
+      borderRadius: '8px',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px'
+    },
+    defaultContent: {
+      html: `<div class="w-full h-full relative flex items-center justify-center bg-slate-950">
+        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80" class="absolute inset-0 w-full h-full object-cover opacity-30" />
+        <div class="z-10 w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer">▶</div>
+        <span class="absolute bottom-2 left-2 text-[9px] text-slate-400 bg-black/60 px-2 py-0.5 rounded font-mono">03:45</span>
+      </div>`
+    }
+  },
+  'media-gallery': {
+    type: 'media-gallery',
+    name: 'Gallery',
+    category: 'Media',
+    icon: '🖼️',
+    defaultPosition: { width: 600, height: 200 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '0px'
+    },
+    defaultContent: {
+      html: `<div class="grid grid-cols-3 gap-2 h-full w-full">
+        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200&q=80" class="w-full h-full object-cover rounded-md border border-slate-800" />
+        <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&q=80" class="w-full h-full object-cover rounded-md border border-slate-800" />
+        <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=200&q=80" class="w-full h-full object-cover rounded-md border border-slate-800" />
+      </div>`
+    }
+  },
+  'media-carousel': {
+    type: 'media-carousel',
+    name: 'Carousel',
+    category: 'Media',
+    icon: '🎠',
+    defaultPosition: { width: 600, height: 300 },
+    defaultStyle: {
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px'
+    },
+    defaultContent: {
+      html: `<div class="relative w-full h-full flex items-center justify-between bg-slate-950 overflow-hidden rounded-xl">
+        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80" class="absolute inset-0 w-full h-full object-cover opacity-80" />
+        <button class="absolute left-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center font-bold text-xs select-none">◀</button>
+        <button class="absolute right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center font-bold text-xs select-none">▶</button>
+        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+          <span class="w-1.5 h-1.5 bg-slate-600 rounded-full"></span>
+          <span class="w-1.5 h-1.5 bg-slate-600 rounded-full"></span>
+        </div>
+      </div>`
+    }
+  },
 
+  // ==========================================
   // 5. BUTTONS
+  // ==========================================
   'btn-primary': {
     type: 'btn-primary',
     name: 'Primary Button',
@@ -182,11 +426,69 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: { label: 'Explore Features 🚀' }
   },
+  'btn-secondary': {
+    type: 'btn-secondary',
+    name: 'Secondary Button',
+    category: 'Buttons',
+    icon: '🔲',
+    defaultPosition: { width: 160, height: 40 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      borderColor: '#334155',
+      borderStyle: 'solid',
+      borderWidth: '1.5px',
+      color: '#94a3b8',
+      borderRadius: '6px',
+      fontSize: '12px',
+      fontWeight: '600',
+      textAlign: 'center',
+      padding: '10px'
+    },
+    defaultContent: { label: 'Learn More' }
+  },
+  'btn-icon': {
+    type: 'btn-icon',
+    name: 'Icon Button',
+    category: 'Buttons',
+    icon: '⭐',
+    defaultPosition: { width: 40, height: 40 },
+    defaultStyle: {
+      backgroundColor: 'rgba(99, 102, 241, 0.15)',
+      color: '#818cf8',
+      borderRadius: '8px',
+      borderColor: '#6366f1',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      padding: '8px'
+    },
+    defaultContent: {
+      html: '<div class="w-full h-full flex items-center justify-center font-bold">⭐</div>'
+    }
+  },
+  'btn-cta': {
+    type: 'btn-cta',
+    name: 'CTA Button',
+    category: 'Buttons',
+    icon: '🔥',
+    defaultPosition: { width: 180, height: 44 },
+    defaultStyle: {
+      backgroundColor: '#818cf8',
+      color: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '13px',
+      fontWeight: '700',
+      textAlign: 'center',
+      padding: '12px'
+    },
+    defaultContent: { label: 'Get Started Instantly ⚡' }
+  },
 
+  // ==========================================
   // 6. CARDS
-  'card-feature': {
-    type: 'card-feature',
-    name: 'Feature Card',
+  // ==========================================
+  'card-basic': {
+    type: 'card-basic',
+    name: 'Basic Card',
     category: 'Cards',
     icon: '🃏',
     defaultPosition: { width: 260, height: 160 },
@@ -200,19 +502,215 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: {
       html: `<div class="flex flex-col gap-2">
+        <h4 class="text-xs font-bold text-white">Title Paragraph</h4>
+        <p class="text-[10px] text-slate-400 leading-relaxed">This is a basic card wrapper block layout. You can drag and drop text elements or modify style values.</p>
+      </div>`
+    }
+  },
+  'card-feature': {
+    type: 'card-feature',
+    name: 'Feature Card',
+    category: 'Cards',
+    icon: '✨',
+    defaultPosition: { width: 260, height: 160 },
+    defaultStyle: {
+      backgroundColor: 'rgba(99, 102, 241, 0.03)',
+      borderColor: '#312e81',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '16px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col gap-2">
         <span class="text-indigo-400 text-lg">✨</span>
-        <h4 class="text-xs font-bold text-white">AI Layout Design</h4>
-        <p class="text-[10px] text-textMuted-dark leading-relaxed">Describe a layout and watch the AI assemble editable panels in real-time.</p>
+        <h4 class="text-xs font-bold text-white">AI UI Generation</h4>
+        <p class="text-[10px] text-slate-400 leading-relaxed">Describe layout wireframes and look at editor modules compile panels in real-time.</p>
+      </div>`
+    }
+  },
+  'card-product': {
+    type: 'card-product',
+    name: 'Product Card',
+    category: 'Cards',
+    icon: '🛍️',
+    defaultPosition: { width: 240, height: 280 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.6)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '10px',
+      padding: '10px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col h-full justify-between gap-1">
+        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80" class="w-full h-32 object-cover rounded-md border border-slate-800" />
+        <h4 class="text-xs font-bold text-white mt-1">Sneaker Max</h4>
+        <p class="text-[9px] text-slate-400">Classic red edition comfort fit.</p>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-xs font-black text-indigo-400">$120.00</span>
+          <button class="bg-indigo-600 text-[9px] font-bold py-1 px-3 rounded text-white select-none">Add</button>
+        </div>
+      </div>`
+    }
+  },
+  'card-pricing': {
+    type: 'card-pricing',
+    name: 'Pricing Card',
+    category: 'Cards',
+    icon: '💎',
+    defaultPosition: { width: 260, height: 320 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.5)',
+      borderColor: '#6366f1',
+      borderStyle: 'solid',
+      borderWidth: '2px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col h-full justify-between gap-3 text-center">
+        <div class="text-[9px] font-bold text-indigo-400 tracking-widest uppercase">Pro Developer</div>
+        <div class="text-2xl font-black text-white">$49<span class="text-xs text-slate-500 font-normal">/mo</span></div>
+        <p class="text-[10px] text-slate-400 leading-normal">Perfect for advanced builders and growing agency designers.</p>
+        <div class="border-t border-slate-800 my-1"></div>
+        <ul class="text-[9px] text-slate-400 flex flex-col gap-1.5 text-left px-1">
+          <li>✨ Unlimited Page Generations</li>
+          <li>📤 Export React / HTML code</li>
+          <li>☁️ Custom Domain Mapping</li>
+        </ul>
+        <button class="bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold py-2 rounded text-white">Subscribe Now</button>
+      </div>`
+    }
+  },
+  'card-testimonial': {
+    type: 'card-testimonial',
+    name: 'Testimonial Card',
+    category: 'Cards',
+    icon: '💬',
+    defaultPosition: { width: 280, height: 160 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '16px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col justify-between h-full gap-2">
+        <p class="text-[10px] text-slate-400 italic leading-relaxed">"The layout zoom and alignment guides save so much editing time. Totally recommend it."</p>
+        <div class="flex items-center gap-2 mt-1">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=60&h=60&fit=crop&q=80" class="w-7 h-7 rounded-full border border-indigo-500" />
+          <div>
+            <h5 class="text-[9px] font-bold text-white">Alexa Green</h5>
+            <p class="text-[8px] text-slate-500">Staff Designer</p>
+          </div>
+        </div>
       </div>`
     }
   },
 
+  // ==========================================
   // 7. FORMS
+  // ==========================================
+  'form-input': {
+    type: 'form-input',
+    name: 'Input',
+    category: 'Forms',
+    icon: '🔤',
+    defaultPosition: { width: 220, height: 40 },
+    defaultStyle: {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '8px 12px'
+    },
+    defaultContent: {
+      html: '<input type="text" placeholder="Enter text..." class="w-full h-full bg-transparent text-xs text-white outline-none border-none pointer-events-none" disabled />'
+    }
+  },
+  'form-textarea': {
+    type: 'form-textarea',
+    name: 'Textarea',
+    category: 'Forms',
+    icon: '📝',
+    defaultPosition: { width: 280, height: 80 },
+    defaultStyle: {
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '8px 12px'
+    },
+    defaultContent: {
+      html: '<textarea placeholder="Enter message..." class="w-full h-full bg-transparent text-xs text-white outline-none border-none resize-none pointer-events-none" disabled></textarea>'
+    }
+  },
+  'form-select': {
+    type: 'form-select',
+    name: 'Select',
+    category: 'Forms',
+    icon: '🔽',
+    defaultPosition: { width: 220, height: 40 },
+    defaultStyle: {
+      backgroundColor: 'rgba(0, 0, 0, 0.25)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '8px 12px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center w-full h-full text-xs text-slate-300 font-semibold select-none pointer-events-none">
+        <span>Select option...</span>
+        <span>▼</span>
+      </div>`
+    }
+  },
+  'form-checkbox': {
+    type: 'form-checkbox',
+    name: 'Checkbox',
+    category: 'Forms',
+    icon: '☑️',
+    defaultPosition: { width: 160, height: 30 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '4px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center gap-2 text-xs font-semibold text-slate-300 pointer-events-none">
+        <input type="checkbox" checked class="rounded border-slate-800 text-indigo-600" disabled />
+        <span>Agree to terms</span>
+      </div>`
+    }
+  },
+  'form-radio': {
+    type: 'form-radio',
+    name: 'Radio Button',
+    category: 'Forms',
+    icon: '🔘',
+    defaultPosition: { width: 160, height: 30 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '4px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center gap-2 text-xs font-semibold text-slate-300 pointer-events-none">
+        <input type="radio" checked class="border-slate-800 text-indigo-600" disabled />
+        <span>Option Selected</span>
+      </div>`
+    }
+  },
   'form-contact': {
     type: 'form-contact',
     name: 'Contact Form',
     category: 'Forms',
-    icon: '📝',
+    icon: '📋',
     defaultPosition: { width: 450, height: 260 },
     defaultStyle: {
       backgroundColor: 'rgba(16, 23, 38, 0.6)',
@@ -225,49 +723,207 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: {
       html: `<form class="flex flex-col gap-3 h-full justify-between" onsubmit="return false;">
         <h4 class="text-xs font-bold text-white mb-1">Get In Touch</h4>
-        <input type="text" placeholder="Name" class="w-full text-[11px] p-2 bg-[#090d16] border border-border-dark rounded-md text-white outline-none">
-        <input type="email" placeholder="Email" class="w-full text-[11px] p-2 bg-[#090d16] border border-border-dark rounded-md text-white outline-none">
-        <textarea placeholder="Message..." class="w-full text-[11px] p-2 bg-[#090d16] border border-border-dark rounded-md text-white h-16 outline-none resize-none"></textarea>
-        <button class="bg-indigo-600 text-[10px] font-bold py-2 px-3 rounded-md text-white w-full">Send Message</button>
+        <input type="text" placeholder="Name" class="w-full text-[11px] p-2 bg-slate-950 border border-slate-800 rounded text-white outline-none">
+        <input type="email" placeholder="Email" class="w-full text-[11px] p-2 bg-slate-950 border border-slate-800 rounded text-white outline-none">
+        <textarea placeholder="Message..." class="w-full text-[11px] p-2 bg-slate-950 border border-slate-800 rounded text-white h-16 outline-none resize-none"></textarea>
+        <button class="bg-indigo-600 text-[10px] font-bold py-2 px-3 rounded text-white w-full">Send Message</button>
       </form>`
     }
   },
-
-  // 8. BUSINESS
-  'business-pricing': {
-    type: 'business-pricing',
-    name: 'Pricing Card',
-    category: 'Business',
-    icon: '💎',
-    defaultPosition: { width: 280, height: 320 },
+  'form-login': {
+    type: 'form-login',
+    name: 'Login Form',
+    category: 'Forms',
+    icon: '🔑',
+    defaultPosition: { width: 320, height: 240 },
     defaultStyle: {
-      backgroundColor: 'rgba(99, 102, 241, 0.03)',
-      borderColor: '#6366f1',
+      backgroundColor: 'rgba(16, 23, 38, 0.6)',
+      borderColor: '#1e293b',
       borderStyle: 'solid',
-      borderWidth: '2px',
+      borderWidth: '1px',
       borderRadius: '12px',
       padding: '24px'
     },
     defaultContent: {
-      html: `<div class="flex flex-col h-full justify-between gap-3 text-center">
-        <div class="text-[10px] font-bold text-indigo-400 tracking-wider uppercase">Pro Developer</div>
-        <div class="text-3xl font-extrabold text-white">$49<span class="text-xs text-textMuted-dark">/mo</span></div>
-        <p class="text-[10px] text-textMuted-dark">Perfect for advanced builders and growing agencies.</p>
-        <div class="border-t border-border-dark/60 my-2"></div>
-        <ul class="text-[10px] text-textMuted-dark flex flex-col gap-2 text-left px-2">
-          <li>✨ Unlimited Page Generations</li>
-          <li>📤 Export React / HTML code</li>
-          <li>☁️ Custom Domain Mapping</li>
-        </ul>
-        <button class="bg-indigo-600 hover:bg-indigo-500 text-[10px] font-bold py-2 rounded-md text-white">Subscribe Now</button>
+      html: `<form class="flex flex-col gap-3 h-full justify-between" onsubmit="return false;">
+        <div class="text-center">
+          <h4 class="text-xs font-bold text-white">Sign In</h4>
+          <p class="text-[9px] text-slate-500">Access your account details</p>
+        </div>
+        <input type="email" placeholder="Email Address" class="w-full text-[11px] p-2.5 bg-slate-950 border border-slate-850 rounded text-white outline-none">
+        <input type="password" placeholder="Password" class="w-full text-[11px] p-2.5 bg-slate-950 border border-slate-850 rounded text-white outline-none">
+        <button class="bg-indigo-600 text-[10px] font-bold py-2.5 rounded text-white w-full">Sign In</button>
+      </form>`
+    }
+  },
+  'form-register': {
+    type: 'form-register',
+    name: 'Registration Form',
+    category: 'Forms',
+    icon: '📝',
+    defaultPosition: { width: 320, height: 300 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.6)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<form class="flex flex-col gap-2.5 h-full justify-between" onsubmit="return false;">
+        <div class="text-center">
+          <h4 class="text-xs font-bold text-white">Create Account</h4>
+          <p class="text-[9px] text-slate-500">Sign up in just 30 seconds</p>
+        </div>
+        <input type="text" placeholder="Full Name" class="w-full text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        <input type="email" placeholder="Email Address" class="w-full text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        <input type="password" placeholder="Password" class="w-full text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        <button class="bg-indigo-650 text-[10px] font-bold py-2 rounded text-white w-full">Register Account</button>
+      </form>`
+    }
+  },
+
+  // ==========================================
+  // 8. BUSINESS
+  // ==========================================
+  'business-services': {
+    type: 'business-services',
+    name: 'Services Section',
+    category: 'Business',
+    icon: '🛠️',
+    defaultPosition: { width: 900, height: 280 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '16px',
+      padding: '32px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col gap-4 text-center h-full justify-center">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider">Our Core Services</h3>
+        <div class="grid grid-cols-3 gap-4 mt-2">
+          <div class="p-4 rounded-lg bg-slate-950/40 border border-slate-800">
+            <span class="text-indigo-400 text-lg">💡</span>
+            <h5 class="text-xs font-bold text-white mt-1">UX/UI Layouts</h5>
+            <p class="text-[9px] text-slate-500 mt-1">Stunning mockup layouts styled dynamically.</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950/40 border border-slate-800">
+            <span class="text-indigo-400 text-lg">⚡</span>
+            <h5 class="text-xs font-bold text-white mt-1">Rapid Building</h5>
+            <p class="text-[9px] text-slate-500 mt-1">Compile design modules instantly to web output.</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950/40 border border-slate-800">
+            <span class="text-indigo-400 text-lg">⚙️</span>
+            <h5 class="text-xs font-bold text-white mt-1">API Integrations</h5>
+            <p class="text-[9px] text-slate-500 mt-1">Custom business workflows mapped automatically.</p>
+          </div>
+        </div>
+      </div>`
+    }
+  },
+  'business-team': {
+    type: 'business-team',
+    name: 'Team Section',
+    category: 'Business',
+    icon: '👥',
+    defaultPosition: { width: 900, height: 280 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '16px',
+      padding: '32px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col gap-4 text-center h-full justify-center">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider">Meet Our Leadership Team</h3>
+        <div class="grid grid-cols-3 gap-6 mt-2 max-w-[760px] mx-auto w-full">
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&q=80" class="w-12 h-12 rounded-full border border-slate-800 object-cover" />
+            <h5 class="text-xs font-bold text-white mt-1.5">Marcus Vance</h5>
+            <p class="text-[8px] text-slate-500">CEO & Founder</p>
+          </div>
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&q=80" class="w-12 h-12 rounded-full border border-slate-800 object-cover" />
+            <h5 class="text-xs font-bold text-white mt-1.5">Sophia Reyes</h5>
+            <p class="text-[8px] text-slate-500">Head of UX</p>
+          </div>
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&q=80" class="w-12 h-12 rounded-full border border-slate-800 object-cover" />
+            <h5 class="text-xs font-bold text-white mt-1.5">David Chen</h5>
+            <p class="text-[8px] text-slate-500">CTO</p>
+          </div>
+        </div>
+      </div>`
+    }
+  },
+  'business-profile': {
+    type: 'business-profile',
+    name: 'Company Profile',
+    category: 'Business',
+    icon: '🏢',
+    defaultPosition: { width: 900, height: 240 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.4)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '16px',
+      padding: '32px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full gap-8">
+        <div class="flex-1 flex flex-col gap-2">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">GenovaX Technologies</h3>
+          <p class="text-[10px] text-slate-400 leading-relaxed">GenovaX is a next-generation website building platform bridging static design wireframes with React component compilation and hosting services.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4 text-center shrink-0">
+          <div class="p-3 bg-slate-950/40 border border-slate-850 rounded">
+            <div class="text-lg font-black text-indigo-400">10M+</div>
+            <div class="text-[8px] text-slate-500 uppercase font-mono">Hits / Mo</div>
+          </div>
+          <div class="p-3 bg-slate-950/40 border border-slate-850 rounded">
+            <div class="text-lg font-black text-indigo-400">140+</div>
+            <div class="text-[8px] text-slate-500 uppercase font-mono">SaaS Tools</div>
+          </div>
+        </div>
+      </div>`
+    }
+  },
+  'business-about': {
+    type: 'business-about',
+    name: 'About Us Section',
+    category: 'Business',
+    icon: 'ℹ️',
+    defaultPosition: { width: 900, height: 280 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col md:flex-row justify-between items-center h-full gap-8">
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="text-[9px] text-indigo-400 uppercase tracking-widest font-bold">About Our Mission</div>
+          <h3 class="text-lg font-black text-white">We Build the Future of Frontend Design</h3>
+          <p class="text-[10px] text-slate-400 leading-relaxed">Our unified canvas workspace allows teams to prototype visual elements, customize layouts, edit inline texts, and compile code in real-time without deployment latency.</p>
+        </div>
+        <div class="flex-1">
+          <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500&q=80" class="rounded-lg border border-slate-800 w-full h-44 object-cover" />
+        </div>
       </div>`
     }
   },
 
+  // ==========================================
   // 9. MARKETING
-  'mkt-hero': {
-    type: 'mkt-hero',
-    name: 'Hero Block',
+  // ==========================================
+  'marketing-hero': {
+    type: 'marketing-hero',
+    name: 'Hero Section',
     category: 'Marketing',
     icon: '🚀',
     defaultPosition: { width: 900, height: 340 },
@@ -282,21 +938,131 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: {
       html: `<div class="flex flex-col md:flex-row items-center justify-between h-full gap-8">
         <div class="flex-1 flex flex-col gap-3">
-          <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold">GenovaX AI Release</div>
-          <h2 class="text-2xl font-extrabold text-white leading-tight">Empower Web Layouts with Agentic AI</h2>
-          <p class="text-xs text-textMuted-dark leading-relaxed">Instantiate, drag, lock, snap, and compile design frames with our professional absolute-positioned builder canvas.</p>
-          <button class="bg-indigo-600 w-32 text-[10px] font-bold py-2 rounded-md text-white mt-2">Get Started Free</button>
+          <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold">GenovaX AI Launch</div>
+          <h2 class="text-2xl font-extrabold text-white leading-tight">Design Web Interfaces at the Speed of Thought</h2>
+          <p class="text-xs text-slate-400 leading-relaxed">Instantiate, drag, lock, snap, and compile design frames with our professional absolute-positioned builder canvas.</p>
+          <button class="bg-indigo-600 w-32 text-[10px] font-bold py-2 rounded text-white mt-2">Get Started Free</button>
         </div>
         <div class="flex-1 max-w-[340px]">
-          <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=500&q=80" class="rounded-lg shadow-glow shadow-indigo-500/10 border border-border-dark" />
+          <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=500&q=80" class="rounded-lg shadow-lg border border-slate-800" />
         </div>
       </div>`
     }
   },
+  'marketing-testimonials': {
+    type: 'marketing-testimonials',
+    name: 'Testimonials',
+    category: 'Marketing',
+    icon: '💬',
+    defaultPosition: { width: 900, height: 260 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.6)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col items-center gap-4 text-center h-full justify-center">
+        <span class="text-xs text-indigo-400 font-bold uppercase tracking-wider font-mono">Testimonials</span>
+        <h3 class="text-lg font-black text-white">What Our Customers Say</h3>
+        <div class="grid grid-cols-2 gap-6 max-w-[800px] mt-2">
+          <div class="p-4 rounded-lg bg-slate-950/40 border border-slate-800 text-left">
+            <p class="text-[10px] text-slate-400 italic">"GenovaX has completely transformed our design workflow. The canvas speed is incredible!"</p>
+            <div class="text-[9px] font-bold text-white mt-2">- Sarah K., Lead Designer</div>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950/40 border border-slate-800 text-left">
+            <p class="text-[10px] text-slate-400 italic">"The drag-and-drop combined with custom CSS settings gives us absolute layout freedom."</p>
+            <div class="text-[9px] font-bold text-white mt-2">- James L., CTO</div>
+          </div>
+        </div>
+      </div>`
+    }
+  },
+  'marketing-faq': {
+    type: 'marketing-faq',
+    name: 'FAQ Section',
+    category: 'Marketing',
+    icon: '❓',
+    defaultPosition: { width: 600, height: 240 },
+    defaultStyle: {
+      backgroundColor: 'transparent',
+      padding: '16px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col gap-3 h-full justify-center">
+        <h3 class="text-base font-black text-white text-center mb-1">Frequently Asked Questions</h3>
+        <div class="space-y-2">
+          <details class="bg-slate-950/40 border border-slate-800 rounded p-2.5" open>
+            <summary class="text-xs font-bold cursor-pointer text-white">Is it fully responsive?</summary>
+            <p class="text-[10px] text-slate-400 mt-1">Yes, you can edit layout properties in Desktop, Tablet, and Mobile viewports.</p>
+          </details>
+          <details class="bg-slate-950/40 border border-slate-800 rounded p-2.5">
+            <summary class="text-xs font-bold cursor-pointer text-white">Can I export clean code?</summary>
+            <p class="text-[10px] text-slate-400 mt-1">Absolutely! You can export React, HTML/CSS, Tailwind CSS, or JSON formats.</p>
+          </details>
+        </div>
+      </div>`
+    }
+  },
+  'marketing-newsletter': {
+    type: 'marketing-newsletter',
+    name: 'Newsletter Signup',
+    category: 'Marketing',
+    icon: '✉️',
+    defaultPosition: { width: 600, height: 140 },
+    defaultStyle: {
+      backgroundColor: 'rgba(99, 102, 241, 0.05)',
+      borderColor: '#312e81',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '10px',
+      padding: '20px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full gap-4">
+        <div class="flex flex-col gap-1 max-w-[280px]">
+          <h4 class="text-xs font-bold text-white">Subscribe to Newsletter</h4>
+          <p class="text-[9px] text-slate-500">Get product release news and discounts.</p>
+        </div>
+        <form class="flex gap-2 flex-1 max-w-[260px]" onsubmit="return false;">
+          <input type="email" placeholder="Your Email" class="w-full text-[10px] p-2 bg-slate-950 border border-slate-850 rounded text-white outline-none">
+          <button class="bg-indigo-600 text-[10px] font-bold px-3 rounded text-white shrink-0">Join</button>
+        </form>
+      </div>`
+    }
+  },
+  'marketing-cta': {
+    type: 'marketing-cta',
+    name: 'Call To Action Section',
+    category: 'Marketing',
+    icon: '📢',
+    defaultPosition: { width: 900, height: 180 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.7)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full px-6">
+        <div class="flex flex-col gap-1">
+          <h3 class="text-sm font-black text-white uppercase tracking-wider">Ready to Build Something Awesome?</h3>
+          <p class="text-[10px] text-slate-500">Create beautiful grids, edit inline texts, and deploy now.</p>
+        </div>
+        <button class="bg-indigo-650 hover:bg-indigo-500 text-xs font-bold py-2.5 px-6 rounded text-white shrink-0">Start Free Trial</button>
+      </div>`
+    }
+  },
 
+  // ==========================================
   // 10. E-COMMERCE
-  'ecom-grid': {
-    type: 'ecom-grid',
+  // ==========================================
+  'ecommerce-grid': {
+    type: 'ecommerce-grid',
     name: 'Product Grid',
     category: 'E-Commerce',
     icon: '🛍️',
@@ -307,71 +1073,39 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: {
       html: `<div class="grid grid-cols-3 gap-6 h-full w-full">
-        <div class="bg-card-dark/40 border border-border-dark rounded-lg p-3 flex flex-col justify-between">
-          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2" />
+        <div class="bg-slate-900/40 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2 border border-slate-850" />
           <h4 class="text-xs font-bold text-white">Classic Red Sneaker</h4>
           <div class="flex justify-between items-center mt-2">
-            <span class="text-xs font-extrabold text-indigo-400">$89</span>
+            <span class="text-xs font-extrabold text-indigo-400">$89.00</span>
             <button class="bg-indigo-600 text-[9px] font-bold py-1 px-2 rounded text-white">Add</button>
           </div>
         </div>
-        <div class="bg-card-dark/40 border border-border-dark rounded-lg p-3 flex flex-col justify-between">
-          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2" />
+        <div class="bg-slate-900/40 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+          <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2 border border-slate-850" />
           <h4 class="text-xs font-bold text-white">Minimalist Smart Watch</h4>
           <div class="flex justify-between items-center mt-2">
-            <span class="text-xs font-extrabold text-indigo-400">$199</span>
+            <span class="text-xs font-extrabold text-indigo-400">$199.00</span>
             <button class="bg-indigo-600 text-[9px] font-bold py-1 px-2 rounded text-white">Add</button>
           </div>
         </div>
-        <div class="bg-card-dark/40 border border-border-dark rounded-lg p-3 flex flex-col justify-between">
-          <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2" />
+        <div class="bg-slate-900/40 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+          <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&q=80" class="w-full h-28 object-cover rounded-md mb-2 border border-slate-850" />
           <h4 class="text-xs font-bold text-white">Retro Sunglasses</h4>
           <div class="flex justify-between items-center mt-2">
-            <span class="text-xs font-extrabold text-indigo-400">$45</span>
+            <span class="text-xs font-extrabold text-indigo-400">$45.00</span>
             <button class="bg-indigo-600 text-[9px] font-bold py-1 px-2 rounded text-white">Add</button>
           </div>
         </div>
       </div>`
     }
   },
-
-  // 11. FOOTER
-  'footer-block': {
-    type: 'footer-block',
-    name: 'Footer',
-    category: 'Footer',
-    icon: '👣',
-    defaultPosition: { width: 900, height: 120 },
-    defaultStyle: {
-      backgroundColor: 'rgba(16, 23, 38, 0.9)',
-      borderColor: '#1e293b',
-      borderStyle: 'solid',
-      borderWidth: '1px',
-      borderRadius: '8px',
-      padding: '24px'
-    },
-    defaultContent: {
-      html: `<div class="flex flex-col md:flex-row justify-between items-center h-full w-full gap-4 text-xs">
-        <div class="flex flex-col gap-1">
-          <div class="font-extrabold text-white text-sm">⚡ GenovaX</div>
-          <div class="text-[10px] text-textMuted-dark">© 2026 GenovaX. All rights reserved.</div>
-        </div>
-        <div class="flex gap-4 text-[10px] text-textMuted-dark font-semibold">
-          <span class="hover:text-white cursor-pointer">Privacy Policy</span>
-          <span class="hover:text-white cursor-pointer">Terms of Service</span>
-          <span class="hover:text-white cursor-pointer">Security</span>
-        </div>
-      </div>`
-    }
-  },
-
-  // 12. BLOG
-  'blog-card': {
-    type: 'blog-card',
-    name: 'Blog Post Card',
-    category: 'Blog',
-    icon: '📝',
-    defaultPosition: { width: 280, height: 260 },
+  'ecommerce-product-card': {
+    type: 'ecommerce-product-card',
+    name: 'Product Card',
+    category: 'E-Commerce',
+    icon: '🏷️',
+    defaultPosition: { width: 240, height: 300 },
     defaultStyle: {
       backgroundColor: 'rgba(16, 23, 38, 0.4)',
       borderColor: '#1e293b',
@@ -381,45 +1115,181 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       padding: '12px'
     },
     defaultContent: {
-      html: `<div class="flex flex-col gap-2 h-full justify-between">
-        <img src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=300&q=80" class="w-full h-24 object-cover rounded-md" />
-        <span class="text-[8px] text-indigo-400 font-extrabold uppercase tracking-widest font-mono">Productivity</span>
-        <h4 class="text-xs font-bold text-white line-clamp-2">How to Optimize Your Design Workspace</h4>
-        <p class="text-[9px] text-textMuted-dark line-clamp-2">Learn UX secrets from professional designers at Framer and Figma.</p>
-        <div class="text-[8px] text-slate-500 mt-1">June 6, 2026 • 5 min read</div>
+      html: `<div class="flex flex-col h-full justify-between gap-1.5">
+        <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&q=80" class="w-full h-36 object-cover rounded-md border border-slate-850" />
+        <h4 class="text-xs font-bold text-white">Premium Product</h4>
+        <div class="flex justify-between items-center mt-1">
+          <span class="text-xs font-extrabold text-indigo-400">$99.00</span>
+          <span class="text-[8px] text-green-400 font-bold bg-green-500/10 px-1.5 py-0.5 rounded">In Stock</span>
+        </div>
       </div>`
     }
   },
-
-  // 13. SOCIAL
-  'social-share': {
-    type: 'social-share',
-    name: 'Social Share',
-    category: 'Social',
-    icon: '🔗',
-    defaultPosition: { width: 280, height: 50 },
+  'ecommerce-cart': {
+    type: 'ecommerce-cart',
+    name: 'Shopping Cart',
+    category: 'E-Commerce',
+    icon: '🛒',
+    defaultPosition: { width: 260, height: 300 },
     defaultStyle: {
-      backgroundColor: 'transparent',
-      padding: '8px'
+      backgroundColor: 'rgba(16, 23, 38, 0.8)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '10px',
+      padding: '16px'
     },
     defaultContent: {
-      html: `<div class="flex gap-2 justify-center items-center h-full w-full">
-        <button class="bg-[#1877f2] text-[10px] font-bold py-1.5 px-3 rounded text-white flex items-center gap-1">Facebook</button>
-        <button class="bg-[#1da1f2] text-[10px] font-bold py-1.5 px-3 rounded text-white flex items-center gap-1">Twitter</button>
-        <button class="bg-[#0a66c2] text-[10px] font-bold py-1.5 px-3 rounded text-white flex items-center gap-1">LinkedIn</button>
+      html: `<div class="flex flex-col h-full justify-between gap-2">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+          <span class="text-xs font-extrabold text-white">Cart Summary</span>
+          <span class="text-[9px] text-indigo-400 font-bold">(2 items)</span>
+        </div>
+        <div class="flex-1 flex flex-col gap-2 py-2 overflow-y-auto">
+          <div class="flex justify-between text-[10px] text-slate-300">
+            <span>👟 Sneaker Max (x1)</span>
+            <span>$120.00</span>
+          </div>
+          <div class="flex justify-between text-[10px] text-slate-300">
+            <span>👓 Sunglasses (x1)</span>
+            <span>$45.00</span>
+          </div>
+        </div>
+        <div class="border-t border-slate-800 pt-2 flex flex-col gap-2">
+          <div class="flex justify-between text-xs font-bold text-white">
+            <span>Total:</span>
+            <span>$165.00</span>
+          </div>
+          <button class="bg-indigo-600 text-[10px] font-bold py-2 rounded text-white w-full">Checkout</button>
+        </div>
       </div>`
     }
   },
-
-  // 14. ADVANCED
-  'adv-chart': {
-    type: 'adv-chart',
-    name: 'Analytics Chart',
-    category: 'Advanced',
-    icon: '📊',
-    defaultPosition: { width: 450, height: 200 },
+  'ecommerce-details': {
+    type: 'ecommerce-details',
+    name: 'Product Details',
+    category: 'E-Commerce',
+    icon: '🔍',
+    defaultPosition: { width: 600, height: 300 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.5)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex gap-6 h-full items-center">
+        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80" class="w-1/3 h-44 object-cover rounded-md border border-slate-850" />
+        <div class="flex-1 flex flex-col gap-2">
+          <h3 class="text-sm font-bold text-white">Classic Red Comfort Sneaker</h3>
+          <p class="text-[10px] text-slate-400 leading-relaxed">Engineered comfort, featuring mesh structures and flexible red sole linings designed to last forever.</p>
+          <div class="text-sm font-black text-indigo-400 mt-1">$89.00</div>
+          <button class="bg-indigo-650 w-36 text-[10px] font-bold py-2 rounded text-white mt-1">Add to Cart</button>
+        </div>
+      </div>`
+    }
+  },
+  'ecommerce-checkout': {
+    type: 'ecommerce-checkout',
+    name: 'Checkout Form',
+    category: 'E-Commerce',
+    icon: '💳',
+    defaultPosition: { width: 600, height: 340 },
     defaultStyle: {
       backgroundColor: 'rgba(16, 23, 38, 0.7)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<form class="flex flex-col gap-3 h-full justify-between" onsubmit="return false;">
+        <h4 class="text-xs font-bold text-white pb-2 border-b border-slate-800">Billing Information</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <input type="text" placeholder="First Name" class="text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+          <input type="text" placeholder="Last Name" class="text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        </div>
+        <input type="text" placeholder="Billing Address" class="w-full text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        <div class="grid grid-cols-3 gap-3">
+          <input type="text" placeholder="City" class="text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+          <input type="text" placeholder="Zip" class="text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+          <input type="text" placeholder="State" class="text-[10px] p-2 bg-slate-950 border border-slate-800 rounded text-white">
+        </div>
+        <button class="bg-indigo-600 text-[10px] font-bold py-2 rounded text-white w-full mt-1">Pay Now ($165.00)</button>
+      </form>`
+    }
+  },
+
+  // ==========================================
+  // 11. FOOTER
+  // ==========================================
+  'footer-simple': {
+    type: 'footer-simple',
+    name: 'Simple Footer',
+    category: 'Footer',
+    icon: '👣',
+    defaultPosition: { width: 900, height: 80 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.9)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '20px'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full text-[10px] text-slate-400 font-semibold px-4">
+        <span>⚡ GenovaX AI Builder</span>
+        <span>© 2026. All rights reserved.</span>
+      </div>`
+    }
+  },
+  'footer-block': {
+    type: 'footer-block',
+    name: 'Multi-Column Footer',
+    category: 'Footer',
+    icon: '👣',
+    defaultPosition: { width: 900, height: 180 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.9)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '24px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col md:flex-row justify-between items-start h-full w-full gap-4 text-xs">
+        <div class="flex flex-col gap-1.5">
+          <div class="font-extrabold text-white text-sm">⚡ GenovaX</div>
+          <div class="text-[10px] text-slate-500">© 2026 GenovaX Technologies.</div>
+        </div>
+        <div class="flex gap-8 text-[10px] text-slate-400 font-semibold">
+          <div class="flex flex-col gap-1">
+            <span class="text-white">Product</span>
+            <span class="hover:text-white cursor-pointer mt-1">Builder</span>
+            <span class="hover:text-white cursor-pointer">Templates</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <span class="text-white">Resources</span>
+            <span class="hover:text-white cursor-pointer mt-1">Guides</span>
+            <span class="hover:text-white cursor-pointer">Support</span>
+          </div>
+        </div>
+      </div>`
+    }
+  },
+  'footer-social': {
+    type: 'footer-social',
+    name: 'Social Footer',
+    category: 'Footer',
+    icon: '🔗',
+    defaultPosition: { width: 900, height: 100 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.9)',
       borderColor: '#1e293b',
       borderStyle: 'solid',
       borderWidth: '1px',
@@ -427,23 +1297,32 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       padding: '16px'
     },
     defaultContent: {
-      html: `<div class="flex flex-col gap-2 h-full justify-between">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-extrabold text-white">Conversion Funnel</span>
-          <span class="text-[9px] text-green-400 font-bold font-mono">+18.4% YoY</span>
-        </div>
-        <div class="flex items-end gap-3 h-24 pt-2">
-          <div class="bg-indigo-500/20 hover:bg-indigo-500 transition-colors w-full h-[30%] rounded-t-sm" title="Jan: 30%"></div>
-          <div class="bg-indigo-500/20 hover:bg-indigo-500 transition-colors w-full h-[45%] rounded-t-sm" title="Feb: 45%"></div>
-          <div class="bg-indigo-500/20 hover:bg-indigo-500 transition-colors w-full h-[65%] rounded-t-sm" title="Mar: 65%"></div>
-          <div class="bg-indigo-500 hover:bg-indigo-400 transition-colors w-full h-[85%] rounded-t-sm" title="Apr: 85%"></div>
-          <div class="bg-indigo-500/20 hover:bg-indigo-500 transition-colors w-full h-[55%] rounded-t-sm" title="May: 55%"></div>
-          <div class="bg-indigo-500/20 hover:bg-indigo-500 transition-colors w-full h-[95%] rounded-t-sm" title="Jun: 95%"></div>
-        </div>
-        <div class="flex justify-between text-[8px] text-slate-500 uppercase font-mono px-0.5">
-          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+      html: `<div class="flex justify-between items-center h-full w-full px-4 text-xs text-slate-400 font-semibold">
+        <span>Connect with us:</span>
+        <div class="flex gap-3">
+          <span class="hover:text-white cursor-pointer">𝕏 Twitter</span>
+          <span class="hover:text-white cursor-pointer">🐙 GitHub</span>
+          <span class="hover:text-white cursor-pointer">💼 LinkedIn</span>
         </div>
       </div>`
+    }
+  },
+  'footer-copyright': {
+    type: 'footer-copyright',
+    name: 'Copyright Footer',
+    category: 'Footer',
+    icon: '🪧',
+    defaultPosition: { width: 900, height: 50 },
+    defaultStyle: {
+      backgroundColor: '#090d16',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '12px'
+    },
+    defaultContent: {
+      html: '<div class="text-center text-[9px] text-slate-500 font-bold uppercase tracking-wider font-mono">© 2026 GENOVAX. DESIGNED AT THE SPEED OF THOUGHT.</div>'
     }
   }
 };

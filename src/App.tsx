@@ -30,7 +30,6 @@ import{
 const App: React.FC = () => {
   const { 
     theme, 
-    toggleTheme,
     projects,
     activeProjectId,
     setProjects,
@@ -215,7 +214,26 @@ const App: React.FC = () => {
           } else if (view === 'generator') {
             setPromptOpen(true);
           } else if (view === 'theme') {
-            toggleTheme();
+            setCurrentView('builder');
+            useBuilderStore.getState().setLeftPanelTab('theme');
+            useBuilderStore.getState().setLeftPanelExpanded(true);
+          } else if (view === 'components') {
+            setCurrentView('builder');
+          } else if (view === 'media') {
+            setCurrentView('builder');
+            useBuilderStore.getState().setLeftPanelTab('media');
+            useBuilderStore.getState().setLeftPanelExpanded(true);
+          } else if (view === 'pages') {
+            setCurrentView('builder');
+            useBuilderStore.getState().setLeftPanelTab('pages');
+            useBuilderStore.getState().setLeftPanelExpanded(true);
+          } else if (view === 'settings') {
+            setCurrentView('builder');
+            useBuilderStore.getState().setLeftPanelTab('settings');
+            useBuilderStore.getState().setLeftPanelExpanded(true);
+          } else if (view === 'builder') {
+            setCurrentView('builder');
+            useBuilderStore.getState().setLeftPanelExpanded(false);
           } else {
             setCurrentView(view);
           }

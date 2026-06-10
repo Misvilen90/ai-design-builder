@@ -112,6 +112,11 @@ loadProject: (id: string) => Promise<void>;
   moveComponentOrder: (id: string, direction: number) => void;
   
   // UI States
+  selectedComponentIds: string[];
+  setSelectionIds: (ids: string[]) => void;
+  snapToGrid: boolean;
+  setSnapToGrid: (snap: boolean) => void;
+  reorderComponents: (draggedId: string, targetId: string) => void;
   setSelection: (id: string | null) => void;
   setMode: (mode: 'canva' | 'sections') => void;
   setZoom: (zoom: number) => void;
@@ -124,6 +129,29 @@ loadProject: (id: string) => Promise<void>;
   setRightPanelCollapsed: (collapsed: boolean) => void;
   leftPanelExpanded: boolean;
   setLeftPanelExpanded: (expanded: boolean) => void;
+  leftPanelTab: 'components' | 'media' | 'theme' | 'pages' | 'settings';
+  setLeftPanelTab: (tab: 'components' | 'media' | 'theme' | 'pages' | 'settings') => void;
+  globalTheme: {
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    backgroundColor: string;
+    textColor: string;
+    fontFamily: string;
+    fontSizePreset: string;
+    fontWeight: string;
+    lineHeight: string;
+    letterSpacing: string;
+    borderRadius: string;
+    boxShadow: string;
+    buttonStyle: Record<string, any>;
+    cardStyle: Record<string, any>;
+    sectionSpacing: string;
+  };
+  updateGlobalTheme: (theme: Partial<BuilderState['globalTheme']>) => void;
+  mediaAssets: Array<{ id: string; type: 'image' | 'video'; name: string; url: string }>;
+  addMediaAsset: (asset: { type: 'image' | 'video'; name: string; url: string }) => void;
+  deleteMediaAsset: (id: string) => void;
 }
 
 const initialPages: Page[] = [
@@ -278,6 +306,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     rightPanelWidth: 180,
     rightPanelCollapsed: false,
     leftPanelExpanded: false,
+    selectedComponentIds: [],
+    snapToGrid: true,
     projects: initialProjs,
     activeProjectId: initialProjs[0]?.id || null,
     setProjects: (projects) => {
@@ -311,6 +341,32 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
         console.error('Failed to load projects:', error);
       }
     },
+    leftPanelTab: 'media',
+    globalTheme: {
+      primaryColor: '#6366f1',
+      secondaryColor: '#475569',
+      accentColor: '#818cf8',
+      backgroundColor: '#090d16',
+      textColor: '#f8fafc',
+      fontFamily: "'Inter', sans-serif",
+      fontSizePreset: 'md',
+      fontWeight: '400',
+      lineHeight: '1.5',
+      letterSpacing: '0px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+      buttonStyle: { backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '6px' },
+      cardStyle: { backgroundColor: 'rgba(16, 23, 38, 0.4)', borderColor: '#1e293b', borderWidth: '1px' },
+      sectionSpacing: '24px'
+    },
+    mediaAssets: [
+      { id: 'm-1', type: 'image', name: 'Dashboard Design Preview', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80' },
+      { id: 'm-2', type: 'image', name: 'MacBook Workspace Desk', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80' },
+      { id: 'm-3', type: 'image', name: 'Modern Coding Screen', url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&q=80' },
+      { id: 'm-4', type: 'image', name: 'Creative Abstract Shapes', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80' },
+      { id: 'm-5', type: 'video', name: 'Nature Forest Video Loop', url: 'https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4' }
+    ],
+
 
   saveToHistory: () => {
     const { pages, selectedComponentId } = get();
@@ -497,15 +553,18 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
 
   deleteComponent: (id) => {
     get().saveToHistory();
+    const { selectedComponentIds } = get();
+    const idsToDelete = selectedComponentIds.includes(id) ? selectedComponentIds : [id];
     set(state => ({
       pages: state.pages.map(page => {
         if (page.id !== state.activePageId) return page;
         return {
           ...page,
-          components: page.components.filter(c => c.id !== id)
+          components: page.components.filter(c => !idsToDelete.includes(c.id))
         };
       }),
-      selectedComponentId: state.selectedComponentId === id ? null : state.selectedComponentId
+      selectedComponentId: idsToDelete.includes(state.selectedComponentId || '') ? null : state.selectedComponentId,
+      selectedComponentIds: state.selectedComponentIds.filter(x => !idsToDelete.includes(x))
     }));
   },
 
@@ -514,21 +573,37 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     const page = get().pages.find(p => p.id === get().activePageId);
     if (!page) return;
     
-    const comp = page.components.find(c => c.id === id);
-    if (!comp) return;
+    const { selectedComponentIds } = get();
+    const idsToDuplicate = selectedComponentIds.includes(id) ? selectedComponentIds : [id];
     
-    const copyComp: BuilderComponent = JSON.parse(JSON.stringify(comp));
-    copyComp.id = `${comp.type}-${Math.random().toString(36).substr(2, 9)}`;
-    copyComp.name = `${comp.name} Copy`;
-    copyComp.position.left += 20; // offset slightly
-    copyComp.position.top += 20;
+    const duplicatedComps: BuilderComponent[] = [];
+    const newSelectedIds: string[] = [];
+    
+    idsToDuplicate.forEach(targetId => {
+      const comp = page.components.find(c => c.id === targetId);
+      if (!comp) return;
+      
+      const copyComp: BuilderComponent = JSON.parse(JSON.stringify(comp));
+      const newId = `${comp.type}-${Math.random().toString(36).substr(2, 9)}`;
+      copyComp.id = newId;
+      copyComp.name = `${comp.name} Copy`;
+      copyComp.position.left += 20;
+      copyComp.position.top += 20;
+      copyComp.position.zIndex = page.components.length + duplicatedComps.length + 1;
+      
+      duplicatedComps.push(copyComp);
+      newSelectedIds.push(newId);
+    });
+    
+    if (duplicatedComps.length === 0) return;
     
     set(state => ({
       pages: state.pages.map(p => {
         if (p.id !== state.activePageId) return p;
-        return { ...p, components: [...p.components, copyComp] };
+        return { ...p, components: [...p.components, ...duplicatedComps] };
       }),
-      selectedComponentId: copyComp.id
+      selectedComponentId: newSelectedIds[newSelectedIds.length - 1],
+      selectedComponentIds: newSelectedIds
     }));
   },
 
@@ -586,7 +661,47 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
   },
 
   setSelection: (selectedComponentId) => {
-    set({ selectedComponentId });
+    set({ 
+      selectedComponentId,
+      selectedComponentIds: selectedComponentId ? [selectedComponentId] : []
+    });
+  },
+
+  setSelectionIds: (selectedComponentIds) => {
+    set({
+      selectedComponentIds,
+      selectedComponentId: selectedComponentIds.length > 0 ? selectedComponentIds[selectedComponentIds.length - 1] : null
+    });
+  },
+
+  setSnapToGrid: (snapToGrid) => {
+    set({ snapToGrid });
+  },
+
+  reorderComponents: (draggedId, targetId) => {
+    get().saveToHistory();
+    set(state => ({
+      pages: state.pages.map(page => {
+        if (page.id !== state.activePageId) return page;
+        const comps = [...page.components];
+        const dragIdx = comps.findIndex(c => c.id === draggedId);
+        const targetIdx = comps.findIndex(c => c.id === targetId);
+        if (dragIdx === -1 || targetIdx === -1) return page;
+        
+        const [draggedComp] = comps.splice(dragIdx, 1);
+        comps.splice(targetIdx, 0, draggedComp);
+        
+        const updatedComps = comps.map((c, index) => ({
+          ...c,
+          position: { ...c.position, zIndex: index + 1 }
+        }));
+        
+        return {
+          ...page,
+          components: updatedComps
+        };
+      })
+    }));
   },
 
   setMode: (activeMode) => {
@@ -755,7 +870,18 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
         };
       })
     }));
-  }
+  },
+
+  setLeftPanelTab: (leftPanelTab) => set({ leftPanelTab }),
+  updateGlobalTheme: (themeUpdates) => set(state => ({
+    globalTheme: { ...state.globalTheme, ...themeUpdates }
+  })),
+  addMediaAsset: (asset) => set(state => ({
+    mediaAssets: [...state.mediaAssets, { ...asset, id: `m-${Date.now()}` }]
+  })),
+  deleteMediaAsset: (id) => set(state => ({
+    mediaAssets: state.mediaAssets.filter(asset => asset.id !== id)
+  }))
 };
 });
 
