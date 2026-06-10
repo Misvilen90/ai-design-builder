@@ -34,6 +34,8 @@ const PagesPanel = () => {
           >
             <input
               value={page.name}
+                aria-label="Page name"
+
               onChange={(e) => renamePage(page.id, e.target.value)}
               style={{
                 border: "none",

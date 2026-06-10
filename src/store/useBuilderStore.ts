@@ -365,7 +365,11 @@ set((state) => ({
       pages: prevSnapshot.pages,
       selectedComponentId: prevSnapshot.selectedComponentId,
       history: newHistory,
-      redoHistory: [...get().redoHistory, { pages: currentClone, selectedComponentId }]
+      redoHistory: [...get().redoHistory, {
+  activePageId: get().activePageId,
+  pages: currentClone,
+  selectedComponentId
+}]
     });
   },
 
@@ -384,7 +388,11 @@ set((state) => ({
       pages: nextSnapshot.pages,
       selectedComponentId: nextSnapshot.selectedComponentId,
       redoHistory: newRedoHistory,
-      history: [...get().history, { pages: currentClone, selectedComponentId }]
+      history: [...get().history, {
+  activePageId: get().activePageId,
+  pages: currentClone,
+  selectedComponentId
+}]
     });
   },
 
