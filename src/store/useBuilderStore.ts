@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TEMPLATES_LIST } from './templatesData';
-import { getProjects, updateCanvas, getCanvas } from '../services/projectApi';
+import { getProjects, updateCanvas, getCanvas, renameProject as renameProjectApi, createProject as createProjectApi, deleteProject as deleteProjectApi } from '../services/projectApi';
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -43,6 +43,7 @@ export interface BuilderComponent {
   position: ComponentPosition;
   locked?: boolean;
   visible?: boolean;
+  prototypeDestination?: string | null;
 }
 
 export interface Page {
@@ -80,12 +81,13 @@ interface BuilderState {
   projects: SavedProject[];
   activeProjectId: string | null;
   setProjects: (projects: SavedProject[]) => void;
-setActiveProjectId: (id: string | null) => void;
-loadProjects: () => Promise<void>;
-loadProject: (id: string) => Promise<void>;
+  setActiveProjectId: (id: string | null) => void;
+  loadProjects: () => Promise<void>;
+  loadProject: (id: string) => Promise<void>;
   saveCurrentProject: (name?: string) => void;
-  deleteProject: (id: string) => void;
-  createNewProject: (name: string) => void;
+  deleteProject: (id: string) => Promise<void>;
+  createNewProject: (name: string) => Promise<void>;
+  renameProject: (id: string, name: string) => Promise<void>;
   updateComponentName: (id: string, name: string) => void;
   
   // Actions
@@ -110,6 +112,7 @@ loadProject: (id: string) => Promise<void>;
   duplicateComponent: (id: string) => void;
   toggleComponentLock: (id: string) => void;
   toggleComponentVisibility: (id: string) => void;
+  setPrototypeDestination: (id: string, destinationPageId: string | null) => void;
   moveComponentOrder: (id: string, direction: number) => void;
   
   // UI States
@@ -323,21 +326,27 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
         const response = await getProjects();
     
         const mongoProjects = response.data;
+        const localProjects = get().projects;
     
-        const projects = mongoProjects.map((project: any) => ({
-          id: project._id,
-          name: project.projectName,
-          createdAt: project.createdAt,
-          updatedAt: project.updatedAt,
-          pages: []
-        }));
+        const projects = mongoProjects.map((project: any) => {
+          const matchedLocal = localProjects.find(p => p.id === project._id);
+          return {
+            id: project._id,
+            name: project.projectName,
+            createdAt: project.createdAt,
+            updatedAt: project.updatedAt,
+            pages: matchedLocal && matchedLocal.pages && matchedLocal.pages.length > 0
+              ? matchedLocal.pages
+              : (project.canvasData?.pages || [])
+          };
+        });
     
         set({
           projects,
-          activeProjectId: projects[0]?.id || null,
+          activeProjectId: get().activeProjectId || projects[0]?.id || null,
         });
-    
-        console.log('Mapped Projects:', projects);
+        localStorage.setItem('genovax_projects_list', JSON.stringify(projects));
+        console.log('Mapped and merged projects:', projects);
       } catch (error) {
         console.error('Failed to load projects:', error);
       }
@@ -655,6 +664,21 @@ set((state) => ({
     }));
   },
 
+  setPrototypeDestination: (id, destinationPageId) => {
+    get().saveToHistory();
+    set(state => ({
+      pages: state.pages.map(page => {
+        if (page.id !== state.activePageId) return page;
+        return {
+          ...page,
+          components: page.components.map(c => 
+            c.id === id ? { ...c, prototypeDestination: destinationPageId || null } : c
+          )
+        };
+      })
+    }));
+  },
+
   moveComponentOrder: (id, direction) => {
     get().saveToHistory();
     set(state => ({
@@ -772,23 +796,67 @@ set((state) => ({
   },
 
   loadProject: async (id) => {
+    // 1. Save current project pages before switching
+    const activeId = get().activeProjectId;
+    if (activeId) {
+      const currentPages = get().pages;
+      const updatedProjects = get().projects.map(p => 
+        p.id === activeId ? { ...p, pages: JSON.parse(JSON.stringify(currentPages)), updatedAt: new Date().toISOString() } : p
+      );
+      set({ projects: updatedProjects });
+      localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    }
+
+    // 2. Instantly load target project pages from local cache list
+    const targetProj = get().projects.find(p => p.id === id);
+    let pagesToLoad: Page[] = [];
+    if (targetProj && targetProj.pages && targetProj.pages.length > 0) {
+      pagesToLoad = targetProj.pages;
+    } else {
+      pagesToLoad = [
+        {
+          id: 'home',
+          name: 'Home Page',
+          components: []
+        }
+      ];
+    }
+    const activePageId = pagesToLoad[0]?.id || 'home';
+
+    set({
+      pages: pagesToLoad,
+      activePageId,
+      activeProjectId: id,
+      selectedComponentId: null,
+      history: [],
+      redoHistory: []
+    });
+
+    localStorage.setItem('genovax_builder_pages', JSON.stringify(pagesToLoad));
+    localStorage.setItem('genovax_builder_active_page', activePageId);
+
+    // 3. Asynchronously fetch the latest canvas from MongoDB in the background
     try {
       const response = await getCanvas(id);
-  
       const canvasData = response.data?.canvasData;
-  
-      set({
-        pages: canvasData?.pages || [],
-        activePageId: canvasData?.pages?.[0]?.id || 'home',
-        activeProjectId: id,
-        selectedComponentId: null,
-        history: [],
-        redoHistory: []
-      });
-  
-      console.log('Canvas loaded from MongoDB');
+      if (canvasData?.pages && canvasData.pages.length > 0) {
+        set({
+          pages: canvasData.pages,
+          activePageId: canvasData.pages[0].id
+        });
+        localStorage.setItem('genovax_builder_pages', JSON.stringify(canvasData.pages));
+        localStorage.setItem('genovax_builder_active_page', canvasData.pages[0].id);
+        
+        const refreshedProjects = get().projects.map(p => 
+          p.id === id ? { ...p, pages: canvasData.pages, updatedAt: new Date().toISOString() } : p
+        );
+        set({ projects: refreshedProjects });
+        localStorage.setItem('genovax_projects_list', JSON.stringify(refreshedProjects));
+        console.log('Project canvas refreshed from MongoDB');
+      }
     } catch (error) {
-      console.error('Failed to load canvas:', error);
+      const err = error as any;
+      console.log('Offline/Network error loading canvas from MongoDB (using local cache):', err.message || err);
     }
   },
 
@@ -797,12 +865,10 @@ set((state) => ({
     const now = new Date().toISOString();
     
     if (activeProjectId) {
-
       try {
         await updateCanvas(activeProjectId, {
           pages
         });
-    
         console.log('Canvas saved to MongoDB');
       } catch (error) {
         console.error('MongoDB canvas save failed:', error);
@@ -822,7 +888,17 @@ set((state) => ({
       localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
     } else {
       const projName = name || 'Untitled Project';
-      const newId = `project-${Date.now()}`;
+      let newId = `project-${Date.now()}`;
+      
+      try {
+        const response = await createProjectApi(projName);
+        if (response.data?._id) {
+          newId = response.data._id;
+        }
+      } catch (e) {
+        console.error("Failed to create project on backend:", e);
+      }
+
       const newProject: SavedProject = {
         id: newId,
         name: projName,
@@ -830,27 +906,82 @@ set((state) => ({
         createdAt: now,
         updatedAt: now
       };
+
+      try {
+        await updateCanvas(newId, { pages: newProject.pages });
+      } catch (e) {
+        console.error("Failed to initialize canvas on backend:", e);
+      }
+
       const updatedProjects = [...projects, newProject];
       set({
         projects: updatedProjects,
         activeProjectId: newId
       });
       localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+      localStorage.setItem('genovax_builder_pages', JSON.stringify(pages));
+      localStorage.setItem('genovax_builder_active_page', get().activePageId);
     }
   },
 
-  deleteProject: (id) => {
+  deleteProject: async (id) => {
+    try {
+      await deleteProjectApi(id);
+    } catch (e) {
+      console.error("Failed to delete project on backend:", e);
+    }
+
     const updatedProjects = get().projects.filter(p => p.id !== id);
+    const wasActive = get().activeProjectId === id;
+    const fallbackActive = wasActive ? (updatedProjects[0]?.id || null) : get().activeProjectId;
+    
     set({ 
       projects: updatedProjects,
-      activeProjectId: get().activeProjectId === id ? null : get().activeProjectId
+      activeProjectId: fallbackActive
     });
+    
+    if (wasActive) {
+      if (updatedProjects[0]) {
+        get().loadProject(updatedProjects[0].id);
+      } else {
+        set({
+          pages: [],
+          activePageId: '',
+          selectedComponentId: null,
+          history: [],
+          redoHistory: []
+        });
+        localStorage.removeItem('genovax_builder_pages');
+        localStorage.removeItem('genovax_builder_active_page');
+      }
+    }
     localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
   },
 
-  createNewProject: (name) => {
+  createNewProject: async (name) => {
+    // Save current active project pages locally before creating a new project
+    const activeId = get().activeProjectId;
+    if (activeId) {
+      const currentPages = get().pages;
+      const updatedProjects = get().projects.map(p => 
+        p.id === activeId ? { ...p, pages: JSON.parse(JSON.stringify(currentPages)), updatedAt: new Date().toISOString() } : p
+      );
+      set({ projects: updatedProjects });
+      localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    }
+
     const now = new Date().toISOString();
-    const newId = `project-${Date.now()}`;
+    let newId = `project-${Date.now()}`;
+    
+    try {
+      const response = await createProjectApi(name.trim());
+      if (response.data?._id) {
+        newId = response.data._id;
+      }
+    } catch (e) {
+      console.error("Failed to create project on backend:", e);
+    }
+
     const newProject: SavedProject = {
       id: newId,
       name: name.trim(),
@@ -864,6 +995,13 @@ set((state) => ({
       createdAt: now,
       updatedAt: now
     };
+
+    try {
+      await updateCanvas(newId, { pages: newProject.pages });
+    } catch (e) {
+      console.error("Failed to initialize canvas on backend:", e);
+    }
+
     const updatedProjects = [...get().projects, newProject];
     set({
       projects: updatedProjects,
@@ -874,6 +1012,22 @@ set((state) => ({
       history: [],
       redoHistory: []
     });
+    localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    localStorage.setItem('genovax_builder_pages', JSON.stringify(newProject.pages));
+    localStorage.setItem('genovax_builder_active_page', 'home');
+  },
+
+  renameProject: async (id, name) => {
+    try {
+      await renameProjectApi(id, name.trim());
+    } catch (e) {
+      console.error("Failed to rename project on backend:", e);
+    }
+
+    const updatedProjects = get().projects.map(p => 
+      p.id === id ? { ...p, name: name.trim(), updatedAt: new Date().toISOString() } : p
+    );
+    set({ projects: updatedProjects });
     localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
   },
 

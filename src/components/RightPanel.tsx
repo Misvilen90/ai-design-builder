@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBuilderStore } from '../store/useBuilderStore';
+import { getEmbeddedLayerItems } from '../services/ai/extractEmbeddedControls';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -70,6 +71,7 @@ export const RightPanel: React.FC = () => {
     updateComponentContent,
     toggleComponentLock,
     toggleComponentVisibility,
+    setPrototypeDestination,
     moveComponentOrder,
     theme,
     rightPanelWidth,
@@ -113,7 +115,7 @@ export const RightPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'properties' | 'layers' | 'history'>('properties');
 
   // Single-expanded accordion section in Properties tab
-  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | null>('settings');
+  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype' | null>('settings');
 
   // Advanced options toggle states
   const [showAdvanced, setShowAdvanced] = useState({
@@ -209,6 +211,7 @@ export const RightPanel: React.FC = () => {
   return (
     <div className="space-y-1">
       {renderAccordionSection('settings', '⚙️ Settings', renderSettingsContent)}
+      {renderAccordionSection('prototype', '🔗 Prototype Link', renderPrototypeContent)}
       {renderAccordionSection('layout', '📐 Layout', renderLayoutContent)}
       {renderAccordionSection('typography', '🔤 Typography', renderTypographyContent)}
       {renderAccordionSection('colors', '🎨 Colors', renderColorsContent)}
@@ -218,7 +221,7 @@ export const RightPanel: React.FC = () => {
 };
   // Helper to render an accordion section
   const renderAccordionSection = (
-    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects', 
+    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype', 
     label: string, 
     contentRenderer: (comp: any, isLocked: boolean, isVisible: boolean) => React.ReactNode
   ) => {
@@ -246,6 +249,39 @@ export const RightPanel: React.FC = () => {
             {contentRenderer(selectedComponent, isLocked, isVisible)}
           </div>
         )}
+      </div>
+    );
+  };
+
+  // Prototype Content Renderer
+  const renderPrototypeContent = (comp: any, isLocked: boolean) => {
+    return (
+      <div className="space-y-1.5">
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-semibold">Redirect to Page</label>
+          <select
+            value={comp.prototypeDestination || ''}
+            disabled={isLocked}
+            onChange={e => {
+              const targetPageId = e.target.value || null;
+              setPrototypeDestination(comp.id, targetPageId);
+            }}
+            className={`w-full text-[9px] p-1 rounded border outline-none bg-[#101726]/60 ${
+              theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+            }`}
+          >
+            <option value="">(None - No Redirect)</option>
+            {pages.map(p => (
+              <option key={p.id} value={p.id}>
+                📄 {p.name} {p.id === activePageId ? '(Current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-[8px] text-slate-400 leading-normal bg-indigo-500/10 border border-indigo-500/20 rounded p-1.5 mt-1 flex gap-1">
+          <span className="shrink-0">💡</span>
+          <span>In Preview Mode, clicking this component will redirect users to the selected page.</span>
+        </div>
       </div>
     );
   };
@@ -800,10 +836,11 @@ export const RightPanel: React.FC = () => {
             const isSelected = selectedComponentIds.includes(comp.id);
             const isLocked = comp.locked === true;
             const isVisible = comp.visible !== false;
+            const embeddedItems = getEmbeddedLayerItems(comp);
 
             return (
+              <div key={comp.id} className="space-y-0.5">
               <div
-                key={comp.id}
                 draggable={!renamingLayerId}
                 onDragStart={(e) => handleLayerDragStart(e, comp.id)}
                 onDragOver={handleLayerDragOver}
@@ -907,6 +944,24 @@ export const RightPanel: React.FC = () => {
                     </div>
                   </>
                 )}
+              </div>
+
+              {embeddedItems.length > 0 && (
+                <div className="ml-3 pl-2 border-l border-slate-800/60 space-y-0.5">
+                  {embeddedItems.map(item => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelection(comp.id)}
+                      className="flex items-center gap-1 p-1 rounded text-[8px] text-slate-500 hover:text-slate-300 hover:bg-slate-800/20 cursor-pointer select-none"
+                      title="Embedded inside parent — select parent to edit"
+                    >
+                      <span>{item.kind === 'button' ? '🔘' : '🔗'}</span>
+                      <span className="truncate italic">{item.label}</span>
+                      <span className="text-[7px] text-slate-600 shrink-0">(embedded)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               </div>
             );
           })}

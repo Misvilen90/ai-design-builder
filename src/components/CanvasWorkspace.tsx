@@ -687,8 +687,8 @@ export const CanvasWorkspace: React.FC = () => {
           }}
           onContextMenu={handleContextMenu}
         >
-          {/* Render component layer nodes */}
-          {components.map((comp) => {
+          {/* Render component layer nodes (sorted so higher z-index stacks on top) */}
+          {[...components].sort((a, b) => a.position.zIndex - b.position.zIndex).map((comp) => {
             const isSelected = selectedComponentId === comp.id;
             const isCompLocked = comp.locked === true;
             const isCompVisible = comp.visible !== false;
@@ -721,6 +721,17 @@ export const CanvasWorkspace: React.FC = () => {
                   selectedComponentIds.includes(comp.id) ? 'ring-1.5 ring-indigo-500' : 'hover:ring-1 hover:ring-indigo-500/40'
                 }`}
               >
+                {/* Prototyping Link Badge Indicator */}
+                {comp.prototypeDestination && (
+                  <div 
+                    className="absolute -top-5 right-1 bg-indigo-600/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow z-40 flex items-center gap-1 select-none pointer-events-none"
+                    title={`Prototype link to: ${pages.find(p => p.id === comp.prototypeDestination)?.name || comp.prototypeDestination}`}
+                  >
+                    <span>🔗</span>
+                    <span>{pages.find(p => p.id === comp.prototypeDestination)?.name || 'Link'}</span>
+                  </div>
+                )}
+
                 {/* Element Inner Content Renderer */}
                 <div 
                   className="w-full h-full overflow-hidden relative select-text"
@@ -749,7 +760,10 @@ export const CanvasWorkspace: React.FC = () => {
                   ) : null}
 
                   {comp.content.html ? (
-                    <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: comp.content.html }} />
+                    <div
+                      className="w-full h-full pointer-events-none select-none"
+                      dangerouslySetInnerHTML={{ __html: comp.content.html }}
+                    />
                   ) : comp.content.src ? (
                     <img 
                       src={comp.content.src} 
@@ -763,6 +777,11 @@ export const CanvasWorkspace: React.FC = () => {
                     <div className="w-full h-full flex items-center justify-center font-semibold">{comp.content.label}</div>
                   ) : (
                     <div className="p-3 text-[10px] text-slate-500">🧱 {comp.name}</div>
+                  )}
+
+                  {/* Transparent hit layer — ensures embedded HTML never blocks selection/drag */}
+                  {editingTextId !== comp.id && !isCompLocked && (
+                    <div className="absolute inset-0 z-[2]" aria-hidden="true" />
                   )}
                 </div>
 
