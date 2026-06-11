@@ -8,6 +8,7 @@ import type { BuilderComponent } from '../../store/useBuilderStore';
 import { COMPONENT_SCHEMAS } from '../../store/schemas';
 import { resolveType } from './schemaCatalog';
 import { getImageForKeyword, resetImageTracker } from '../imageService';
+import { flattenEmbeddedControls } from './extractEmbeddedControls';
 
 // ---------------------------------------------------------------------------
 // Main mapping function
@@ -48,7 +49,7 @@ export function mapPlanToComponents(plan: AILayoutPlan): BuilderComponent[] {
     );
   }
 
-  return components;
+  return flattenEmbeddedControls(components);
 }
 
 // ---------------------------------------------------------------------------

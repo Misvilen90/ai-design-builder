@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useBuilderStore } from "../../../store/useBuilderStore";
 
 const GRID_SIZE = 8;
@@ -21,10 +21,6 @@ const CanvasWorkspace = () => {
     startH: 0,
   });
 
-  const groupDragRef = useRef({
-    isGroup: false,
-    startPositions: {} as Record<string, { left: number; top: number }>,
-  });
 
   // state
   const [guides, setGuides] = useState({
