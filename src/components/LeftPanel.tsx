@@ -57,6 +57,7 @@ const ThemeColorPicker: React.FC<ThemeColorPickerProps> = ({ label, value, onCha
           value={value && value.startsWith('#') ? value : '#ffffff'}
           onChange={e => onChange(e.target.value)}
           className="hidden"
+          aria-label="Choose color"
         />
       </div>
     </div>
@@ -441,6 +442,7 @@ export const LeftPanel: React.FC = () => {
                   ref={imageInputRef}
                   type="file"
                   accept="image/*"
+                  aria-label="Upload Image"
                   onChange={e => handleFileUpload(e, 'image')}
                   className="hidden"
                 />
@@ -448,6 +450,7 @@ export const LeftPanel: React.FC = () => {
                   ref={videoInputRef}
                   type="file"
                   accept="video/*"
+                  aria-label="UploadVideo"
                   onChange={e => handleFileUpload(e, 'video')}
                   className="hidden"
                 />
@@ -583,8 +586,9 @@ export const LeftPanel: React.FC = () => {
               <span className="text-slate-500 uppercase tracking-widest font-extrabold text-[8px]">Typography</span>
               <div className="space-y-2">
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Font Family</label>
+                  <label htmlFor="fontFamily" className="text-slate-500">Font Family</label>
                   <select
+                  id="fontFamily"
                     value={globalTheme.fontFamily}
                     onChange={e => updateGlobalTheme({ fontFamily: e.target.value })}
                     className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[9px]"
@@ -597,8 +601,9 @@ export const LeftPanel: React.FC = () => {
                   </select>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Size Preset</label>
+                  <label htmlFor="fontFamily" className="text-slate-500">Size Preset</label>
                   <select
+                    id="fontFamily"
                     value={globalTheme.fontSizePreset}
                     onChange={e => updateGlobalTheme({ fontSizePreset: e.target.value })}
                     className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[9px]"
@@ -627,8 +632,9 @@ export const LeftPanel: React.FC = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Global Shadows</label>
+                  <label htmlFor="boxShadow" className="text-slate-500">Global Shadows</label>
                   <select
+                    id="boxShadow"
                     value={globalTheme.boxShadow}
                     onChange={e => updateGlobalTheme({ boxShadow: e.target.value })}
                     className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[9px]"
@@ -688,9 +694,11 @@ export const LeftPanel: React.FC = () => {
                     {isRenaming ? (
                       <div className="flex items-center gap-1 w-full" onClick={e => e.stopPropagation()}>
                         <input
+                        id="renamePage"
                           type="text"
                           value={renamePageValue}
                           onChange={e => setRenamePageValue(e.target.value)}
+                          aria-label="RenamePage"
                           className="bg-black/60 border border-indigo-500 rounded px-1.5 py-0.5 text-xs text-white flex-1 outline-none"
                           autoFocus
                           onKeyDown={e => {
@@ -700,6 +708,7 @@ export const LeftPanel: React.FC = () => {
                         />
                         <button onClick={() => handleSaveRenamePage(page.id)} className="text-green-500 p-0.5">
                           <Check className="w-3 h-3" />
+                          Rename
                         </button>
                       </div>
                     ) : (
