@@ -555,6 +555,9 @@ export const CanvasWorkspace: React.FC = () => {
     } else if (comp.content.label !== undefined) {
       setEditingTextId(comp.id);
       setEditingTextVal(comp.content.label || '');
+    } else if (comp.content.html) {
+      setEditingTextId(comp.id);
+      setEditingTextVal(comp.content.html);
     }
   };
 
@@ -566,10 +569,14 @@ export const CanvasWorkspace: React.FC = () => {
         updateComponentContent(editingTextId, { text: editingTextVal });
       } else if (comp.content.label !== undefined) {
         updateComponentContent(editingTextId, { label: editingTextVal });
+      } else if (comp.content.html) {
+        updateComponentContent(editingTextId, { html: editingTextVal });
       }
     }
     setEditingTextId(null);
   };
+
+  const [hoveredCompId, setHoveredCompId] = useState<string | null>(null);
 
   // Viewport Width Mapping
   const getViewportWidth = () => {
@@ -707,6 +714,8 @@ export const CanvasWorkspace: React.FC = () => {
                   e.stopPropagation();
                   setSelection(comp.id);
                 }}
+                onMouseEnter={() => setHoveredCompId(comp.id)}
+                onMouseLeave={() => setHoveredCompId(null)}
                 style={{
                   position: 'absolute',
                   left: `${comp.position.left}px`,
@@ -715,12 +724,31 @@ export const CanvasWorkspace: React.FC = () => {
                   height: `${comp.position.height}px`,
                   transform: `rotate(${comp.position.rotate || 0}deg)`,
                   zIndex: comp.position.zIndex,
-                  cursor: isCompLocked ? 'not-allowed' : 'grab'
+                  cursor: isCompLocked ? 'not-allowed' : (comp.content.text !== undefined || comp.content.label !== undefined || comp.content.html ? 'text' : 'grab')
                 }}
                 className={`group ${
                   selectedComponentIds.includes(comp.id) ? 'ring-1.5 ring-indigo-500' : 'hover:ring-1 hover:ring-indigo-500/40'
                 }`}
               >
+                {/* Hover tooltip */}
+                {hoveredCompId === comp.id && !selectedComponentIds.includes(comp.id) && (
+                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#1a1f2e] text-white text-[9px] font-medium px-2 py-0.5 rounded shadow-lg z-50 whitespace-nowrap pointer-events-none flex items-center gap-1 border border-slate-600/50">
+                    <span>{comp.icon}</span>
+                    <span>{comp.name}</span>
+                    {comp.content.html && <span className="text-slate-400 ml-0.5">Double-click to edit</span>}
+                  </div>
+                )}
+                {/* Prototyping Link Badge Indicator */}
+                {comp.prototypeDestination && (
+                  <div 
+                    className="absolute -top-5 right-1 bg-indigo-600/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow z-40 flex items-center gap-1 select-none pointer-events-none"
+                    title={`Prototype link to: ${pages.find(p => p.id === comp.prototypeDestination)?.name || comp.prototypeDestination}`}
+                  >
+                    <span>🔗</span>
+                    <span>{pages.find(p => p.id === comp.prototypeDestination)?.name || 'Link'}</span>
+                  </div>
+                )}
+
                 {/* Element Inner Content Renderer */}
                 <div 
                   className="w-full h-full overflow-hidden relative select-text"
@@ -731,11 +759,16 @@ export const CanvasWorkspace: React.FC = () => {
                 >
                   {/* Inline Text Editor Overlay */}
                   {editingTextId === comp.id ? (
-                    <div className="absolute inset-0 z-40 bg-black/60 p-2 flex items-center justify-center" onClick={e => e.stopPropagation()}>
+                    <div className="absolute inset-0 z-40 bg-black/60 p-2 flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+                      <div className="w-full max-w-[500px] mb-1 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {comp.content.html ? 'Edit HTML — modify text, tags, or classes' : 'Edit text — press Enter to save'}
+                        </span>
+                      </div>
                       <textarea
                         value={editingTextVal}
                         onChange={e => setEditingTextVal(e.target.value)}
-                        className="w-full h-full p-2 bg-[#090d16] border border-indigo-500 rounded text-xs text-white outline-none resize-none"
+                        className={`w-full p-2 bg-[#090d16] border border-indigo-500 rounded text-xs text-white outline-none resize-none font-mono ${comp.content.html ? 'h-48' : 'h-20'}`}
                         autoFocus
                         onBlur={handleSaveTextEdit}
                         onKeyDown={e => {
