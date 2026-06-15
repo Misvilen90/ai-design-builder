@@ -19,44 +19,149 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
 
   // 1. Generate HTML Output
   const generateHTML = (comps: BuilderComponent[]) => {
-    let htmlStr = `<div style="position: relative; width: 1000px; min-height: 800px; background-color: #090d16; overflow: hidden; border-radius: 8px;">\n`;
-    
-    comps.forEach(c => {
+    let htmlStr = `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenovaX Export</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+  *{
+    box-sizing:border-box;
+  }
+  
+  body{
+    margin:0;
+    padding:20px;
+    background:#090d16;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height:100vh;
+    font-family:Inter,Arial,sans-serif;
+  }
+  
+  #genovax-root{
+    position:relative;
+    width:1000px;
+    min-height:900px;
+    background:#090d16;
+    overflow:hidden;
+    border-radius:8px;
+  }
+  </style>
+  
+  </head>
+  <body>
+  
+  <div id="genovax-root">
+  `;
+  
+    comps.forEach((c) => {
       const styles = Object.entries(c.style)
-        .map(([k, v]) => `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v}`)
-        .join('; ');
-      
-      const posStyles = `position: absolute; left: ${c.position.left}px; top: ${c.position.top}px; width: ${c.position.width}px; height: ${c.position.height}px; transform: rotate(${c.position.rotate}deg); z-index: ${c.position.zIndex}`;
-
-      htmlStr += `  <div id="${c.id}" style="${posStyles}; ${styles}">\n`;
+        .map(
+          ([k, v]) =>
+            `${k.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase())}: ${v}`
+        )
+        .join("; ");
+  
+      const posStyles = `
+        position:absolute;
+        left:${c.position.left}px;
+        top:${c.position.top}px;
+        width:${c.position.width}px;
+        height:${c.position.height}px;
+        transform:rotate(${c.position.rotate}deg);
+        z-index:${c.position.zIndex};
+      `;
+  
+      htmlStr += `
+  <div id="${c.id}" style="${posStyles}; ${styles}">
+  `;
+  
       if (c.content.html) {
-        htmlStr += `    ${c.content.html}\n`;
+        htmlStr += `${c.content.html}\n`;
       } else if (c.content.src) {
-        htmlStr += `    <img src="${c.content.src}" alt="${c.content.alt || 'media'}" style="width: 100%; height: 100%; object-fit: cover;" />\n`;
+        htmlStr += `
+  <img
+    src="${c.content.src}"
+    alt="${c.content.alt || "media"}"
+    style="
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    "
+  />
+  `;
       } else if (c.content.text) {
-        htmlStr += `    <div style="padding: 8px;">${c.content.text}</div>\n`;
+        htmlStr += `
+  <div style="padding:8px;">
+    ${c.content.text}
+  </div>
+  `;
       } else if (c.content.label) {
-        htmlStr += `    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 600;">${c.content.label}</div>\n`;
+        htmlStr += `
+  <div
+    style="
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:600;
+    "
+  >
+    ${c.content.label}
+  </div>
+  `;
       }
-      htmlStr += `  </div>\n`;
+  
+      htmlStr += `
+  </div>
+  `;
     });
-
-    htmlStr += `</div>`;
+  
+    htmlStr += `
+  </div>
+  
+  </body>
+  </html>
+  `;
+  
     return htmlStr;
   };
-
   // 2. Generate CSS Output
-  const generateCSS = (comps: BuilderComponent[]) => {
-    let cssStr = `/* GenovaX Exported Stylesheet */\n\n`;
-    comps.forEach(c => {
-      const styles = Object.entries(c.style)
-        .map(([k, v]) => `  ${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v};`)
-        .join('\n');
-      
-      cssStr += `#${c.id} {\n  position: absolute;\n  left: ${c.position.left}px;\n  top: ${c.position.top}px;\n  width: ${c.position.width}px;\n  height: ${c.position.height}px;\n  transform: rotate(${c.position.rotate}deg);\n  z-index: ${c.position.zIndex};\n${styles}\n}\n\n`;
-    });
-    return cssStr;
-  };
+const generateCSS = (comps: BuilderComponent[]) => {
+  let cssStr = `/* GenovaX Exported Stylesheet */\n\n`;
+
+  comps.forEach(c => {
+    const styles = Object.entries(c.style)
+      .map(
+        ([k, v]) =>
+          `  ${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}: ${v};`
+      )
+      .join('\n');
+
+    cssStr += `#${c.id} {
+  position: absolute;
+  left: ${c.position.left}px;
+  top: ${c.position.top}px;
+  width: ${c.position.width}px;
+  height: ${c.position.height}px;
+  transform: rotate(${c.position.rotate}deg);
+  z-index: ${c.position.zIndex};
+${styles}
+}
+
+`;
+  });
+
+  return cssStr;
+};
 
   // 3. Generate React Output
   const generateReact = (comps: BuilderComponent[]) => {
@@ -69,7 +174,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         .map(line => `      ${line}`)
         .join('\n');
 
-      const posStyles = `position: 'absolute', left: ${c.position.left}, top: ${c.position.top}, width: ${c.position.width}, height: ${c.position.height}, transform: 'rotate(${c.position.rotate}deg)', zIndex: ${c.position.zIndex}`;
+        const posStyles = `position: 'absolute', left: ${c.position.left}, top: ${c.position.top}, width: ${c.position.width}, minHeight: ${c.position.height}, transform: 'rotate(${c.position.rotate}deg)', zIndex: ${c.position.zIndex}`;
 
       reactStr += `      {/* ${c.name} */}\n      <div style={{\n        ${posStyles},\n        ...${camelStyles.trim()}\n      }}>\n`;
 

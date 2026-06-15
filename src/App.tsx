@@ -9,12 +9,6 @@ import { AIPromptPopup } from './components/AIPromptPopup';
 import { ExportModal } from './components/ExportModal';
 import { TemplatesModal } from './components/TemplatesModal';
 import { TEMPLATES_LIST } from './store/templatesData';
-import {
-  createProject,
-  createVersion,
-  getVersions,
-  restoreVersion
-} from './services/projectApi';
 import{
   Sparkles, 
   Layers, 
@@ -32,8 +26,6 @@ const App: React.FC = () => {
     theme, 
     projects,
     activeProjectId,
-    setProjects,
-    setActiveProjectId,
     loadProject,
     loadProjects,
     deleteProject,
@@ -46,7 +38,6 @@ const App: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
-  const [versions, setVersions] = useState<any[]>([]);
   // Custom View State: 'dashboard' | 'builder' | 'templates' | 'projects' | 'settings'
   const [currentView, setCurrentView] = useState('builder');
   // Canvas AI loading spinner state
@@ -327,7 +318,7 @@ const App: React.FC = () => {
                   if (!name || !name.trim()) return;
                 
                   try {
-                    await createProject(name.trim());
+                    await createNewProject(name.trim());
                 
                     await loadProjects();
                 

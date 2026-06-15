@@ -87,7 +87,7 @@ const renameProject = async (req, res) => {
         projectName: req.body.projectName
       },
       {
-        new: true
+        returnDocument: 'after'
       }
     );
 
@@ -114,7 +114,7 @@ const saveCanvasData = async (req, res) => {
         canvasData: req.body.canvasData
       },
       {
-        new: true
+        returnDocument: 'after'
       }
     );
 
@@ -229,7 +229,7 @@ const createProjectVersion = async (
           canvasData: version.canvasData
         },
         {
-          new: true
+          returnDocument: 'after'
         }
       );
   
