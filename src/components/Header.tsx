@@ -13,7 +13,8 @@ import {
   Save, 
   UploadCloud, 
   Code,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -184,6 +185,19 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <Code className="w-3.5 h-3.5" />
           Export Code
+        </button>
+
+        <button 
+          onClick={() => window.open('/?preview=true', '_blank')}
+          className={`text-xs font-semibold border px-3 py-1.5 rounded-md flex items-center gap-1 transition-colors ${
+            theme === 'dark' 
+              ? 'border-[#1e293b] hover:bg-slate-800 text-white' 
+              : 'border-[#e2e8f0] hover:bg-slate-50 text-slate-700'
+          }`}
+          title="Preview layout in a new tab"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          Preview
         </button>
 
         <button 

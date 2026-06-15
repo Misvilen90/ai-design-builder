@@ -121,14 +121,14 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
       padding: '12px 24px'
     },
     defaultContent: {
-      html: `<div class="flex justify-between items-center h-full w-full">
+      html: `<div class="flex justify-between items-center h-full w-full pointer-events-none">
         <div class="font-extrabold text-sm text-indigo-400">⚡ GENOVAX</div>
         <div class="flex gap-4 text-xs font-semibold text-slate-400">
-          <span class="hover:text-white cursor-pointer">Product</span>
-          <span class="hover:text-white cursor-pointer">Templates</span>
-          <span class="hover:text-white cursor-pointer">Pricing</span>
+          <span>Product</span>
+          <span>Templates</span>
+          <span>Pricing</span>
         </div>
-        <button class="bg-indigo-650 text-[10px] font-bold px-3 py-1 rounded text-white">Sign In</button>
+        <button class="bg-indigo-650 text-[10px] font-bold px-3 py-1 rounded text-white pointer-events-none">Sign In</button>
       </div>`
     }
   },

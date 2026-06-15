@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useBuilderStore } from './store/useBuilderStore';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
+import { PreviewWorkspace } from './components/PreviewWorkspace';
 import { LeftPanel } from './components/LeftPanel';
 import { RightPanel } from './components/RightPanel';
 import { CanvasWorkspace } from './components/CanvasWorkspace';
@@ -22,6 +23,8 @@ import{
 } from 'lucide-react';
 
 const App: React.FC = () => {
+  const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true';
+
   const { 
     theme, 
     projects,
@@ -29,7 +32,6 @@ const App: React.FC = () => {
     loadProject,
     loadProjects,
     deleteProject,
-    createNewProject,
     pages,
     activePageId
   } = useBuilderStore();
@@ -46,11 +48,13 @@ const App: React.FC = () => {
   // Autosaved notification status
   const [showAutoSaved, setShowAutoSaved] = useState(false);
   useEffect(() => {
+    if (isPreview) return;
     loadProjects();
-  }, []);
+  }, [isPreview]);
  
   // Global listeners for events dispatched from sidebar icons
   useEffect(() => {
+    if (isPreview) return;
     const handleOpenTemplates = () => setTemplatesOpen(true);
     const handleOpenPrompt = () => setPromptOpen(true);
     const handleOpenSidebar = () => setSidebarOpen(true);
@@ -74,6 +78,7 @@ const App: React.FC = () => {
 
   // Keyboard Shortcuts for Undo/Redo (Ctrl+Z / Ctrl+Y)
   useEffect(() => {
+    if (isPreview) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (
@@ -109,7 +114,11 @@ const App: React.FC = () => {
       try {
         const parsed = JSON.parse(savedPages);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          useBuilderStore.setState({ pages: parsed });
+          const flattenedPages = parsed.map((page: any) => ({
+            ...page,
+            components: flattenEmbeddedControls(page.components || []),
+          }));
+          useBuilderStore.setState({ pages: flattenedPages });
           if (savedActivePage) {
             useBuilderStore.setState({ activePageId: savedActivePage });
           }
@@ -122,6 +131,7 @@ const App: React.FC = () => {
 
   // Autosave interval every 10 seconds
   useEffect(() => {
+    if (isPreview) return;
     let timeoutId: any;
     const interval = setInterval(() => {
       const {
@@ -168,7 +178,7 @@ const App: React.FC = () => {
   // Helper to load template into active canvas page
   const handleSelectTemplate = (_templateId: string, comps: any[]) => {
     const updatedPages = pages.map(page => 
-      page.id === activePageId ? { ...page, components: comps } : page
+      page.id === activePageId ? { ...page, components: flattenEmbeddedControls(comps) } : page
     );
     useBuilderStore.getState().setPages(updatedPages);
     setCurrentView('builder');
@@ -182,6 +192,10 @@ const App: React.FC = () => {
     { name: 'AI Credits Remaining', value: '98%', icon: <Zap className="w-5 h-5 text-yellow-400" /> },
     { name: 'Build Quality Score', value: '100', icon: <CheckCircle2 className="w-5 h-5 text-green-400" /> }
   ];
+
+  if (isPreview) {
+    return <PreviewWorkspace />;
+  }
 
   return (
     <div className={`h-screen w-screen flex flex-col overflow-hidden ${theme === 'dark' ? 'dark bg-[#090d16]' : 'bg-[#f8fafc]'}`}>

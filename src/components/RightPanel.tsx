@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useBuilderStore } from '../store/useBuilderStore';
+import { getEmbeddedLayerItems } from '../services/ai/extractEmbeddedControls';
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -46,6 +47,8 @@ const ColorPickerRow: React.FC<ColorPickerRowProps> = ({ label, value, onChange,
         <input
           ref={inputRef}
           type="color"
+          aria-label={`${label} system color input`}
+
           value={value && value.startsWith('#') ? value : '#ffffff'}
           disabled={disabled}
           onChange={e => onChange(e.target.value)}
@@ -68,6 +71,7 @@ export const RightPanel: React.FC = () => {
     updateComponentContent,
     toggleComponentLock,
     toggleComponentVisibility,
+    setPrototypeDestination,
     moveComponentOrder,
     theme,
     rightPanelWidth,
@@ -111,7 +115,7 @@ export const RightPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'properties' | 'layers' | 'history'>('properties');
 
   // Single-expanded accordion section in Properties tab
-  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | null>('settings');
+  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype' | null>('settings');
 
   // Advanced options toggle states
   const [showAdvanced, setShowAdvanced] = useState({
@@ -192,32 +196,32 @@ export const RightPanel: React.FC = () => {
 
   // Properties Tab Renderer
   const renderPropertiesTab = () => {
-    if (!selectedComponent) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-3 mt-12 opacity-60 select-none">
-          <Sliders className="w-8 h-8 mb-2 text-indigo-500" />
-          <h4 className="text-[10px] font-bold text-slate-400">No Selection</h4>
-          <p className="text-[9px] text-slate-500 mt-1 max-w-[130px] leading-relaxed">
-            Select an element on canvas to configure.
-          </p>
-        </div>
-      );
-    }
-
+  if (!selectedComponent) {
     return (
-      <div className="space-y-1">
-        {renderAccordionSection('settings', '⚙️ Settings', renderSettingsContent)}
-        {renderAccordionSection('layout', '📐 Layout', renderLayoutContent)}
-        {renderAccordionSection('typography', '🔤 Typography', renderTypographyContent)}
-        {renderAccordionSection('colors', '🎨 Colors', renderColorsContent)}
-        {renderAccordionSection('effects', '📏 Effects & spacing', renderEffectsContent)}
+      <div className="flex flex-col items-center justify-center text-center p-3 mt-12 opacity-60 select-none">
+        <Sliders className="w-8 h-8 mb-2 text-indigo-500" />
+        <h4 className="text-[10px] font-bold text-slate-400">No Selection</h4>
+        <p className="text-[9px] text-slate-500 mt-1 max-w-[130px] leading-relaxed">
+          Select an element on canvas to configure.
+        </p>
       </div>
     );
-  };
+  }
 
+  return (
+    <div className="space-y-1">
+      {renderAccordionSection('settings', '⚙️ Settings', renderSettingsContent)}
+      {renderAccordionSection('prototype', '🔗 Prototype Link', renderPrototypeContent)}
+      {renderAccordionSection('layout', '📐 Layout', renderLayoutContent)}
+      {renderAccordionSection('typography', '🔤 Typography', renderTypographyContent)}
+      {renderAccordionSection('colors', '🎨 Colors', renderColorsContent)}
+      {renderAccordionSection('effects', '📏 Effects & spacing', renderEffectsContent)}
+    </div>
+  );
+};
   // Helper to render an accordion section
   const renderAccordionSection = (
-    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects', 
+    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype', 
     label: string, 
     contentRenderer: (comp: any, isLocked: boolean, isVisible: boolean) => React.ReactNode
   ) => {
@@ -249,6 +253,39 @@ export const RightPanel: React.FC = () => {
     );
   };
 
+  // Prototype Content Renderer
+  const renderPrototypeContent = (comp: any, isLocked: boolean) => {
+    return (
+      <div className="space-y-1.5">
+        <div className="flex flex-col gap-1">
+          <label className="text-slate-500 font-semibold">Redirect to Page</label>
+          <select
+            value={comp.prototypeDestination || ''}
+            disabled={isLocked}
+            onChange={e => {
+              const targetPageId = e.target.value || null;
+              setPrototypeDestination(comp.id, targetPageId);
+            }}
+            className={`w-full text-[9px] p-1 rounded border outline-none bg-[#101726]/60 ${
+              theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+            }`}
+          >
+            <option value="">(None - No Redirect)</option>
+            {pages.map(p => (
+              <option key={p.id} value={p.id}>
+                📄 {p.name} {p.id === activePageId ? '(Current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="text-[8px] text-slate-400 leading-normal bg-indigo-500/10 border border-indigo-500/20 rounded p-1.5 mt-1 flex gap-1">
+          <span className="shrink-0">💡</span>
+          <span>In Preview Mode, clicking this component will redirect users to the selected page.</span>
+        </div>
+      </div>
+    );
+  };
+
   // Settings Content Renderer
   const renderSettingsContent = (comp: any, isLocked: boolean, isVisible: boolean) => {
     const showAdv = showAdvanced.settings;
@@ -258,6 +295,7 @@ export const RightPanel: React.FC = () => {
           <label className="text-slate-500">Name</label>
           <input
             type="text"
+            aria-label="component name"
             value={comp.name}
             disabled={isLocked}
             onChange={e => {
@@ -272,7 +310,7 @@ export const RightPanel: React.FC = () => {
         {comp.content.text !== undefined && (
           <div className="flex flex-col gap-0.5">
             <label className="text-slate-500">Text Content</label>
-            <textarea
+            <textarea aria-label="Text content"
               value={comp.content.text}
               disabled={isLocked}
               onChange={e => updateComponentContent(comp.id, { text: e.target.value })}
@@ -287,13 +325,15 @@ export const RightPanel: React.FC = () => {
           <div className="flex flex-col gap-0.5">
             <label className="text-slate-500">Btn Label</label>
             <input
+             id={`label-${comp.id}`}
               type="text"
               value={comp.content.label}
               disabled={isLocked}
               onChange={e => updateComponentContent(comp.id, { label: e.target.value })}
-              className={`w-full text-[9px] p-1 rounded border outline-none bg-black/25 ${
+              className={`w-full text-[9px] p-0.5 px-1 rounded border outline-none bg-black/25 ${
                 theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
               }`}
+    
             />
           </div>
         )}
@@ -346,6 +386,7 @@ export const RightPanel: React.FC = () => {
           <div className="flex flex-col gap-0.5">
             <label className="text-slate-500">Width (px)</label>
             <input
+            id={`width-${comp.id}`}
               type="number"
               value={comp.position.width}
               disabled={isLocked}
@@ -356,9 +397,10 @@ export const RightPanel: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-0.5">
-            <label className="text-slate-500">Height (px)</label>
+            <label htmlFor={`height-${comp.id}`} className="text-slate-500">Height (px)</label>
             <input
               type="number"
+              id={`height-${comp.id}`}
               value={comp.position.height}
               disabled={isLocked}
               onChange={e => updateComponentPosition(comp.id, { height: parseInt(e.target.value) || 0 })}
@@ -381,21 +423,23 @@ export const RightPanel: React.FC = () => {
             <div className="mt-1.5 pt-1.5 border-t border-slate-800/40 space-y-1">
               <div className="grid grid-cols-2 gap-1">
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">X Position (L)</label>
+                  <label htmlFor="x-position" className="text-slate-500">X Position (L)</label>
                   <input
+                    id="x-position"
                     type="number"
                     value={comp.position.left}
                     disabled={isLocked}
                     onChange={e => updateComponentPosition(comp.id, { left: parseInt(e.target.value) || 0 })}
-                    className={`w-full text-[9px] p-0.5 px-1 rounded border outline-none bg-black/25 ${
+                   className={`w-full text-[9px] p-0.5 px-1 rounded border outline-none bg-black/25 ${
                       theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
                     }`}
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Y Position (T)</label>
+                  <label htmlFor="y-position" className="text-slate-500">Y Position (T)</label>
                   <input
                     type="number"
+                    id="y-position"
                     value={comp.position.top}
                     disabled={isLocked}
                     onChange={e => updateComponentPosition(comp.id, { top: parseInt(e.target.value) || 0 })}
@@ -408,8 +452,9 @@ export const RightPanel: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-1">
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Rotation (°)</label>
+                  <label htmlFor="rotation" className="text-slate-500">Rotation (°)</label>
                   <input
+                    id="rotation"
                     type="number"
                     value={comp.position.rotate || 0}
                     disabled={isLocked}
@@ -420,9 +465,10 @@ export const RightPanel: React.FC = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-slate-500">Z-Index</label>
+                  <label htmlFor="z-index" className="text-slate-500">Z-Index</label>
                   <input
                     type="number"
+                    id="z-index"
                     value={comp.position.zIndex}
                     disabled={isLocked}
                     onChange={e => updateComponentPosition(comp.id, { zIndex: parseInt(e.target.value) || 0 })}
@@ -465,9 +511,10 @@ export const RightPanel: React.FC = () => {
       <div className="space-y-1">
         <div className="grid grid-cols-2 gap-1">
           <div className="flex flex-col gap-0.5">
-            <label className="text-slate-500">Size</label>
+            <label htmlFor="font-size" className="text-slate-500">Size</label>
             <input
               type="text"
+              id="font-size"
               value={comp.style.fontSize || '16px'}
               disabled={isLocked}
               onChange={e => updateComponentStyle(comp.id, { fontSize: e.target.value })}
@@ -477,8 +524,9 @@ export const RightPanel: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-0.5">
-            <label className="text-slate-500">Weight</label>
+            <label htmlFor="font-weight" className="text-slate-500">Weight</label>
             <select
+              id="font-weight"
               value={comp.style.fontWeight || '400'}
               disabled={isLocked}
               onChange={e => updateComponentStyle(comp.id, { fontWeight: e.target.value })}
@@ -506,8 +554,9 @@ export const RightPanel: React.FC = () => {
           {showAdv && (
             <div className="mt-1.5 pt-1.5 border-t border-slate-800/40 space-y-1">
               <div className="flex flex-col gap-0.5">
-                <label className="text-slate-500">Font Family</label>
+                <label htmlFor="font-family" className="text-slate-500">Font Family</label>
                 <select
+                  id="font-family"
                   value={comp.style.fontFamily || 'sans-serif'}
                   disabled={isLocked}
                   onChange={e => updateComponentStyle(comp.id, { fontFamily: e.target.value })}
@@ -523,8 +572,9 @@ export const RightPanel: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-0.5">
-                <label className="text-slate-500">Alignment</label>
+                <label htmlFor="alignment" className="text-slate-500">Alignment</label>
                 <select
+                  id="alignment"
                   value={comp.style.textAlign || 'left'}
                   disabled={isLocked}
                   onChange={e => updateComponentStyle(comp.id, { textAlign: e.target.value as any })}
@@ -592,8 +642,9 @@ export const RightPanel: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-0.5">
-                <label className="text-slate-500">Border Style</label>
+                <label htmlFor="border-style" className="text-slate-500">Border Style</label>
                 <select
+                  id="border-style"
                   value={comp.style.borderStyle || 'none'}
                   disabled={isLocked}
                   onChange={e => updateComponentStyle(comp.id, { borderStyle: e.target.value })}
@@ -622,9 +673,10 @@ export const RightPanel: React.FC = () => {
       <div className="space-y-1">
         <div className="grid grid-cols-2 gap-1">
           <div className="flex flex-col gap-0.5">
-            <label className="text-slate-500">Padding</label>
+            <label htmlFor="padding" className="text-slate-500">Padding</label>
             <input
               type="text"
+              id="padding"
               value={comp.style.padding || '0px'}
               disabled={isLocked}
               onChange={e => updateComponentStyle(comp.id, { padding: e.target.value })}
@@ -634,9 +686,10 @@ export const RightPanel: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-0.5">
-            <label className="text-slate-500">Radius</label>
+            <label htmlFor="border-Radius"className="text-slate-500">Radius</label>
             <input
               type="text"
+              id="border-Radius"
               value={comp.style.borderRadius || '0px'}
               disabled={isLocked}
               onChange={e => updateComponentStyle(comp.id, { borderRadius: e.target.value })}
@@ -658,9 +711,10 @@ export const RightPanel: React.FC = () => {
           {showAdv && (
             <div className="mt-1.5 pt-1.5 border-t border-slate-800/40 space-y-1.5">
               <div className="flex flex-col gap-0.5">
-                <label className="text-slate-500">Margin</label>
+                <label htmlFor="margin" className="text-slate-500">Margin</label>
                 <input
                   type="text"
+                  id="margin"
                   value={comp.style.margin || '0px'}
                   disabled={isLocked}
                   onChange={e => updateComponentStyle(comp.id, { margin: e.target.value })}
@@ -678,6 +732,7 @@ export const RightPanel: React.FC = () => {
                   </span>
                 </div>
                 <input
+                  aria-label="opacity"
                   type="range"
                   min="0"
                   max="1"
@@ -692,6 +747,8 @@ export const RightPanel: React.FC = () => {
               <div className="flex flex-col gap-0.5 mt-1 border-t border-slate-800/40 pt-1.5">
                 <label className="text-slate-500">Box Shadow</label>
                 <select
+                id={`shadow-${comp.id}`}
+  aria-label="Box shadow preset"
                   value={
                     ['none', 
                      '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
@@ -779,10 +836,11 @@ export const RightPanel: React.FC = () => {
             const isSelected = selectedComponentIds.includes(comp.id);
             const isLocked = comp.locked === true;
             const isVisible = comp.visible !== false;
+            const embeddedItems = getEmbeddedLayerItems(comp);
 
             return (
+              <div key={comp.id} className="space-y-0.5">
               <div
-                key={comp.id}
                 draggable={!renamingLayerId}
                 onDragStart={(e) => handleLayerDragStart(e, comp.id)}
                 onDragOver={handleLayerDragOver}
@@ -813,6 +871,7 @@ export const RightPanel: React.FC = () => {
                   <div className="flex items-center gap-1 w-full" onClick={e => e.stopPropagation()}>
                     <input
                       type="text"
+                      aria-label="Rename layer"
                       value={renameLayerValue}
                       onChange={e => setRenameLayerValue(e.target.value)}
                       className="bg-black/60 border border-indigo-500 rounded px-1.5 py-0.5 text-[9px] text-white flex-1 outline-none font-medium"
@@ -886,6 +945,24 @@ export const RightPanel: React.FC = () => {
                   </>
                 )}
               </div>
+
+              {embeddedItems.length > 0 && (
+                <div className="ml-3 pl-2 border-l border-slate-800/60 space-y-0.5">
+                  {embeddedItems.map(item => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelection(comp.id)}
+                      className="flex items-center gap-1 p-1 rounded text-[8px] text-slate-500 hover:text-slate-300 hover:bg-slate-800/20 cursor-pointer select-none"
+                      title="Embedded inside parent — select parent to edit"
+                    >
+                      <span>{item.kind === 'button' ? '🔘' : '🔗'}</span>
+                      <span className="truncate italic">{item.label}</span>
+                      <span className="text-[7px] text-slate-600 shrink-0">(embedded)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              </div>
             );
           })}
         </div>
@@ -921,7 +998,7 @@ export const RightPanel: React.FC = () => {
         pages: targetSnapshot.pages,
         selectedComponentId: targetSnapshot.selectedComponentId,
         history: state.history.slice(0, index),
-        redoHistory: [...state.redoHistory, { pages: currentClone, selectedComponentId: state.selectedComponentId }]
+        redoHistory: [...state.redoHistory, { pages: currentClone, selectedComponentId: state.selectedComponentId,activePageId: state.activePageId, }]
       });
     };
 
