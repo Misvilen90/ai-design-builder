@@ -21,12 +21,16 @@ interface HeaderProps {
   onToggleSidebar: () => void;
   onOpenExport: () => void;
   onOpenPrompt: () => void;
+  user: any;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
   onToggleSidebar, 
   onOpenExport,
-  onOpenPrompt
+  onOpenPrompt,
+  user,
+  onLogout
 }) => {
   const { 
     pages, 
@@ -245,11 +249,31 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
         </button>
 
-        <img 
-          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&q=80" 
-          alt="Profile Avatar" 
-          className="w-7 h-7 rounded-full object-cover border border-indigo-500"
-        />
+        {/* User profile & Logout */}
+        {user && (
+          <div className="flex items-center gap-2 border-l pl-3 border-border-dark">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-inner border border-indigo-400">
+                {user.username ? user.username.substring(0, 2) : (user.email ? user.email.substring(0, 2) : 'US')}
+              </div>
+              <div className="hidden xl:flex flex-col text-left">
+                <span className="text-xs font-semibold max-w-[100px] truncate">
+                  {user.username || 'User'}
+                </span>
+                <span className="text-[10px] text-gray-400 max-w-[100px] truncate">
+                  {user.role || 'Member'}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="text-xs font-medium text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-500/10"
+              title="Sign Out"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

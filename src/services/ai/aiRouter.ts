@@ -6,6 +6,7 @@ import type {
 } from './types';
 import type { Page } from '../../store/useBuilderStore';
 import { useAIStore } from '../../store/useAIStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { buildSystemPrompt as buildLayoutSystemPrompt } from './layoutPlanner';
 import {
   buildPrototypeSystemPrompt,
@@ -13,14 +14,25 @@ import {
 } from './prototypePlanner';
 import { mapPlanToComponents } from './componentMapper';
 
-const API_BASE =
+// In development the Vite proxy forwards /api/* → http://localhost:5000.
+// In production, set VITE_API_BASE to your deployed backend URL.
+const API_BASE: string =
   (typeof import.meta !== 'undefined' &&
     (import.meta as any).env?.VITE_API_BASE) ||
-  'http://localhost:5000';
+  '';
+
+function getAuthHeaders(): Record<string, string> {
+  const token = useAuthStore.getState().token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 async function getBackendProviders(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/api/ai/providers`);
+    const res = await fetch(`${API_BASE}/api/ai/providers`, {
+      headers: {
+        ...getAuthHeaders(),
+      },
+    });
     const data = await res.json();
     return data.providers || [];
   } catch {
@@ -38,7 +50,10 @@ async function callBackendGenerate(
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ prompt, provider }),
   });
 
@@ -306,7 +321,10 @@ export async function testProviderConnection(
   try {
     const response = await fetch(`${API_BASE}/api/ai/test-connection`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify({ provider: providerName }),
     });
     const result = await response.json();

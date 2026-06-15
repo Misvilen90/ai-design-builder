@@ -13,10 +13,10 @@ export function createGeminiProvider(): AIProvider {
 
     async generate(prompt: string): Promise<string> {
       const store = useAIStore.getState();
-      const apiKey = store.getActiveGeminiKey();
+      const apiKey = store.geminiApiKey;
       if (!apiKey) throw new Error('No Gemini API key configured.');
 
-      const model = store.geminiModel || 'gemini-2.5-flash';
+      const model = 'gemini-2.5-flash';
       const ai = new GoogleGenAI({ apiKey });
 
       const result = await callWithRetryAndTimeout(async () => {
@@ -38,14 +38,14 @@ export function createGeminiProvider(): AIProvider {
 
     async testConnection(): Promise<boolean> {
       const store = useAIStore.getState();
-      const apiKey = store.getActiveGeminiKey();
+      const apiKey = store.geminiApiKey;
       if (!apiKey) return false;
 
       try {
         const ai = new GoogleGenAI({ apiKey });
         const result = await callWithRetryAndTimeout(async () => {
           const response = await ai.models.generateContent({
-            model: store.geminiModel || 'gemini-2.5-flash',
+            model: 'gemini-2.5-flash',
             contents: 'Respond with exactly: "GenovaX AI connected!"',
             config: { maxOutputTokens: 50 },
           });

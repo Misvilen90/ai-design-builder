@@ -8,7 +8,7 @@ import type { BuilderComponent } from '../../store/useBuilderStore';
 // Provider
 // ---------------------------------------------------------------------------
 
-export type AIProviderSelection = 'auto' | 'gemini' | 'groq' | 'openrouter';
+export type AIProviderSelection = 'auto' | 'gemini' | 'groq' | 'openrouter' | 'openai';
 
 export interface AIProvider {
   /** Human-readable provider name (e.g. "Gemini", "Groq") */

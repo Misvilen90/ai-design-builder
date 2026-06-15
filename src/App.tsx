@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBuilderStore } from './store/useBuilderStore';
+import { useAuthStore } from './store/useAuthStore';
+import { AuthPage } from './components/AuthPage';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { PreviewWorkspace } from './components/PreviewWorkspace';
@@ -30,6 +32,30 @@ import{
 const App: React.FC = () => {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true';
 
+  // Auth state
+  const { token, user, verifyToken, logout } = useAuthStore();
+  const isAuthenticated = !!token && !!user;
+
+  // Verify token on mount
+  useEffect(() => {
+    if (token) verifyToken();
+  }, []);
+
+  // If not authenticated and not in preview mode, show login page
+  if (!isAuthenticated && !isPreview) {
+    return <AuthPage />;
+  }
+
+  return <AuthenticatedApp isPreview={isPreview} onLogout={logout} user={user} />;
+};
+
+interface AuthenticatedAppProps {
+  isPreview: boolean;
+  onLogout: () => void;
+  user: { name: string; email: string; role: string } | null;
+}
+
+const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout, user }) => {
   const { 
     theme, 
     projects,
@@ -55,7 +81,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isPreview) return;
     loadProjects();
-  }, [isPreview]);
+  }, [isPreview, user]);
  
   // Global listeners for events dispatched from sidebar icons
   useEffect(() => {
@@ -253,6 +279,8 @@ const App: React.FC = () => {
         onToggleSidebar={() => setSidebarOpen(true)}
         onOpenExport={() => setExportOpen(true)}
         onOpenPrompt={() => setPromptOpen(true)}
+        user={user}
+        onLogout={onLogout}
       />
 
       {/* 2. Global Drawer menu sidebar */}

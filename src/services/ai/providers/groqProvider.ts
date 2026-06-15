@@ -14,10 +14,10 @@ export function createGroqProvider(): AIProvider {
 
     async generate(prompt: string): Promise<string> {
       const store = useAIStore.getState();
-      const apiKey = store.getActiveGroqKey();
+      const apiKey = store.groqApiKey;
       if (!apiKey) throw new Error('No Groq API key configured.');
 
-      const model = store.groqModel || 'llama-3.3-70b-versatile';
+      const model = 'llama-3.3-70b-versatile';
 
       const result = await callWithRetryAndTimeout(async () => {
         const response = await fetch(GROQ_API_URL, {
@@ -56,7 +56,7 @@ export function createGroqProvider(): AIProvider {
 
     async testConnection(): Promise<boolean> {
       const store = useAIStore.getState();
-      const apiKey = store.getActiveGroqKey();
+      const apiKey = store.groqApiKey;
       if (!apiKey) return false;
 
       try {
@@ -68,7 +68,7 @@ export function createGroqProvider(): AIProvider {
               'Authorization': `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: store.groqModel || 'llama-3.3-70b-versatile',
+              model: 'llama-3.3-70b-versatile',
               messages: [
                 { role: 'user', content: 'Respond with exactly: "GenovaX AI connected!"' },
               ],

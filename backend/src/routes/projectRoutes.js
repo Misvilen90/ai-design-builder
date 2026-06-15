@@ -12,8 +12,12 @@ const {
   createProjectVersion,
   restoreVersion 
 } = require("../controllers/projectController");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
+
+// All project routes require authentication
+router.use(requireAuth);
 
 router.post("/", createProject);
 

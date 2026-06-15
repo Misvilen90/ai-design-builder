@@ -344,10 +344,32 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
           };
         });
     
+        const currentActiveId = get().activeProjectId;
+        const newActiveId = projects.some(p => p.id === currentActiveId)
+          ? currentActiveId
+          : (projects[0]?.id || null);
+
         set({
           projects,
-          activeProjectId: get().activeProjectId || projects[0]?.id || null,
+          activeProjectId: newActiveId,
         });
+
+        if (newActiveId) {
+          const activeProj = projects.find(p => p.id === newActiveId);
+          if (activeProj && activeProj.pages && activeProj.pages.length > 0) {
+            set({
+              pages: activeProj.pages,
+              activePageId: activeProj.pages[0].id
+            });
+          }
+        } else {
+          // Clear pages if no projects exist
+          set({
+            pages: [{ id: 'home', name: 'Home Page', components: [] }],
+            activePageId: 'home'
+          });
+        }
+
         localStorage.setItem('genovax_projects_list', JSON.stringify(projects));
         console.log('Mapped and merged projects:', projects);
       } catch (error) {

@@ -927,6 +927,7 @@ export const LeftPanel: React.FC = () => {
                   <option value="gemini">Gemini</option>
                   <option value="groq">Groq</option>
                   <option value="openrouter">OpenRouter</option>
+                  <option value="openai">ChatGPT (OpenAI)</option>
                 </select>
               </div>
 

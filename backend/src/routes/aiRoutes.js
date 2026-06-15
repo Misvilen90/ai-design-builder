@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/aiController');
+const { requireAuth } = require('../middleware/auth');
 
-router.post('/generate', aiController.generateLayout);
-router.post('/generate-prototype', aiController.generatePrototype);
-router.post('/test-connection', aiController.testConnection);
-router.get('/providers', aiController.getProviders);
+// All AI routes require authentication
+router.post('/generate', requireAuth, aiController.generateLayout);
+router.post('/generate-prototype', requireAuth, aiController.generatePrototype);
+router.post('/test-connection', requireAuth, aiController.testConnection);
+router.get('/providers', requireAuth, aiController.getProviders);
 
 module.exports = router;
