@@ -130,7 +130,7 @@ function extractFromComponent(
 
   // --- Extract headings ---
   const headingMatches = [...html.matchAll(HEADING_REGEX)];
-  const headingSchema = COMPONENT_SCHEMAS['heading-block'];
+  const headingSchema = COMPONENT_SCHEMAS['content-heading'];
 
   headingMatches.forEach((match, idx) => {
     const text = stripHtml(match[2]);
@@ -166,7 +166,7 @@ function extractFromComponent(
 
   // --- Extract paragraphs ---
   const paragraphMatches = [...html.matchAll(PARAGRAPH_REGEX)];
-  const paragraphSchema = COMPONENT_SCHEMAS['text-block'];
+  const paragraphSchema = COMPONENT_SCHEMAS['content-paragraph'];
 
   paragraphMatches.forEach((match, idx) => {
     const text = stripHtml(match[1]);

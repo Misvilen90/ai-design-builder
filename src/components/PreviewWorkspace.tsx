@@ -9,6 +9,7 @@ import {
   Sun, 
   Moon
 } from 'lucide-react';
+import { getThemeStylesheet } from '../utils/themeStyles';
 
 export const PreviewWorkspace: React.FC = () => {
   const { 
@@ -42,6 +43,19 @@ export const PreviewWorkspace: React.FC = () => {
       if (e.key === 'genovax_builder_active_page') {
         if (e.newValue) {
           setActivePageId(e.newValue);
+        }
+      }
+      if (e.key === 'genovax_builder_theme') {
+        if (e.newValue === 'light' || e.newValue === 'dark') {
+          useBuilderStore.setState({ theme: e.newValue });
+        }
+      }
+      if (e.key === 'genovax_global_theme') {
+        try {
+          const parsed = JSON.parse(e.newValue || '{}');
+          useBuilderStore.setState({ globalTheme: { ...useBuilderStore.getState().globalTheme, ...parsed } });
+        } catch (err) {
+          console.error('Failed to parse updated global theme from localStorage:', err);
         }
       }
     };
@@ -192,7 +206,7 @@ export const PreviewWorkspace: React.FC = () => {
       {/* 2. Scrollable Canvas Area */}
       <main className="flex-1 flex justify-center items-start pt-14 overflow-y-auto">
         <div 
-          className={`relative min-h-[1200px] transition-all duration-300 ${getViewportWidth()}`}
+          className={`relative min-h-[1200px] transition-all duration-300 canvas-theme-scope ${getViewportWidth()}`}
           style={{
             backgroundColor: globalTheme.backgroundColor,
             color: globalTheme.textColor,
@@ -200,6 +214,8 @@ export const PreviewWorkspace: React.FC = () => {
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)'
           }}
         >
+          {/* Inject dynamic stylesheet mapped to global theme parameters */}
+          <style dangerouslySetInnerHTML={{ __html: getThemeStylesheet(globalTheme) }} />
           {components.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[600px] text-center p-8">
               <div className="text-4xl mb-3">📭</div>

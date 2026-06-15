@@ -298,7 +298,44 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     return defaultProjects;
   };
 
+  const getInitialTheme = (): 'dark' | 'light' => {
+    const saved = localStorage.getItem('genovax_builder_theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  };
+
+  const defaultGlobalTheme = {
+    primaryColor: '#6366f1',
+    secondaryColor: '#475569',
+    accentColor: '#818cf8',
+    backgroundColor: '#090d16',
+    textColor: '#f8fafc',
+    fontFamily: "'Inter', sans-serif",
+    fontSizePreset: 'md',
+    fontWeight: '400',
+    lineHeight: '1.5',
+    letterSpacing: '0px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
+    buttonStyle: { backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '6px' },
+    cardStyle: { backgroundColor: 'rgba(16, 23, 38, 0.4)', borderColor: '#1e293b', borderWidth: '1px' },
+    sectionSpacing: '24px'
+  };
+
+  const getInitialGlobalTheme = () => {
+    const saved = localStorage.getItem('genovax_global_theme');
+    if (saved) {
+      try {
+        return { ...defaultGlobalTheme, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error('Failed to parse global theme from LocalStorage:', e);
+      }
+    }
+    return defaultGlobalTheme;
+  };
+
   const initialProjs = getInitialProjects();
+  const initialTheme = getInitialTheme();
+  const initialGlobalTheme = getInitialGlobalTheme();
 
   return {
     pages: initialPages,
@@ -307,7 +344,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     selectedComponentId: null,
     zoom: 100,
     viewport: 'desktop',
-    theme: 'dark',
+    theme: initialTheme,
     history: [],
     redoHistory: [],
     rightPanelWidth: 180,
@@ -377,23 +414,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
       }
     },
     leftPanelTab: 'media',
-    globalTheme: {
-      primaryColor: '#6366f1',
-      secondaryColor: '#475569',
-      accentColor: '#818cf8',
-      backgroundColor: '#090d16',
-      textColor: '#f8fafc',
-      fontFamily: "'Inter', sans-serif",
-      fontSizePreset: 'md',
-      fontWeight: '400',
-      lineHeight: '1.5',
-      letterSpacing: '0px',
-      borderRadius: '8px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
-      buttonStyle: { backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '6px' },
-      cardStyle: { backgroundColor: 'rgba(16, 23, 38, 0.4)', borderColor: '#1e293b', borderWidth: '1px' },
-      sectionSpacing: '24px'
-    },
+    globalTheme: initialGlobalTheme,
     mediaAssets: [
       { id: 'm-1', type: 'image', name: 'Dashboard Design Preview', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80' },
       { id: 'm-2', type: 'image', name: 'MacBook Workspace Desk', url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80' },
@@ -532,6 +553,7 @@ set((state) => ({
   setPages: (pages) => {
     get().saveToHistory();
     set({ pages });
+    localStorage.setItem('genovax_builder_pages', JSON.stringify(pages));
   },
 
   setActivePageId: (id) => {
@@ -541,6 +563,7 @@ set((state) => ({
       selectedComponentId: null,
       selectedComponentIds: [],
     });
+    localStorage.setItem('genovax_builder_active_page', id);
   },
 
   addComponent: (schema) => {
@@ -550,23 +573,27 @@ set((state) => ({
       id: `${schema.type}-${Math.random().toString(36).substring(2, 9)}`,
     };
     
-    set(state => ({
-      pages: state.pages.map(page => {
+    set(state => {
+      const nextPages = state.pages.map(page => {
         if (page.id !== state.activePageId) return page;
         return {
           ...page,
           components: [...page.components, newComponent]
         };
-      }),
-      selectedComponentId: newComponent.id
-    }));
+      });
+      localStorage.setItem('genovax_builder_pages', JSON.stringify(nextPages));
+      return {
+        pages: nextPages,
+        selectedComponentId: newComponent.id
+      };
+    });
   },
 
   updateComponentStyle: (id, styleUpdates) => {
     // Avoid full history snapshots on tiny inputs (e.g. typing colors), save only key changes or let caller handle it.
     // In our case we just update values, and verify selection
-    set(state => ({
-      pages: state.pages.map(page => {
+    set(state => {
+      const nextPages = state.pages.map(page => {
         if (page.id !== state.activePageId) return page;
         return {
           ...page,
@@ -574,13 +601,15 @@ set((state) => ({
             c.id === id ? { ...c, style: { ...c.style, ...styleUpdates } } : c
           )
         };
-      })
-    }));
+      });
+      localStorage.setItem('genovax_builder_pages', JSON.stringify(nextPages));
+      return { pages: nextPages };
+    });
   },
 
   updateComponentPosition: (id, positionUpdates) => {
-    set(state => ({
-      pages: state.pages.map(page => {
+    set(state => {
+      const nextPages = state.pages.map(page => {
         if (page.id !== state.activePageId) return page;
         return {
           ...page,
@@ -588,13 +617,15 @@ set((state) => ({
             c.id === id ? { ...c, position: { ...c.position, ...positionUpdates } } : c
           )
         };
-      })
-    }));
+      });
+      localStorage.setItem('genovax_builder_pages', JSON.stringify(nextPages));
+      return { pages: nextPages };
+    });
   },
 
   updateComponentContent: (id, contentUpdates) => {
-    set(state => ({
-      pages: state.pages.map(page => {
+    set(state => {
+      const nextPages = state.pages.map(page => {
         if (page.id !== state.activePageId) return page;
         return {
           ...page,
@@ -602,8 +633,10 @@ set((state) => ({
             c.id === id ? { ...c, content: { ...c.content, ...contentUpdates } } : c
           )
         };
-      })
-    }));
+      });
+      localStorage.setItem('genovax_builder_pages', JSON.stringify(nextPages));
+      return { pages: nextPages };
+    });
   },
 
   deleteComponent: (id) => {
@@ -795,6 +828,7 @@ set((state) => ({
       } else {
         root.classList.remove('dark');
       }
+      localStorage.setItem('genovax_builder_theme', newTheme);
       return { theme: newTheme };
     });
   },
@@ -1073,9 +1107,11 @@ set((state) => ({
   },
 
   setLeftPanelTab: (leftPanelTab) => set({ leftPanelTab }),
-  updateGlobalTheme: (themeUpdates) => set(state => ({
-    globalTheme: { ...state.globalTheme, ...themeUpdates }
-  })),
+  updateGlobalTheme: (themeUpdates) => set(state => {
+    const nextTheme = { ...state.globalTheme, ...themeUpdates };
+    localStorage.setItem('genovax_global_theme', JSON.stringify(nextTheme));
+    return { globalTheme: nextTheme };
+  }),
   addMediaAsset: (asset) => set(state => ({
     mediaAssets: [...state.mediaAssets, { ...asset, id: `m-${Date.now()}` }]
   })),

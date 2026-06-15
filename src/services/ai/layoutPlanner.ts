@@ -147,12 +147,31 @@ const COMPONENT_HEIGHT_GUIDE: Record<string, number> = {
 // System prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildSystemPrompt(): string {
+export function buildSystemPrompt(theme?: any): string {
   const catalog = buildSchemaCatalog();
 
   const heightGuideText = Object.entries(COMPONENT_HEIGHT_GUIDE)
     .map(([type, h]) => `  "${type}": ${h}px tall`)
     .join('\n');
+
+  let themeInstructions = '';
+  if (theme) {
+    themeInstructions = `
+## Selected Theme & Style Rules (CRITICAL)
+The user has chosen a specific visual theme. You MUST apply these theme settings to EACH component by setting style properties inside the "styleOverrides" field in the component JSON (e.g. "styleOverrides": { "backgroundColor": "#...", "color": "#...", "borderRadius": "..." }).
+Theme colors and typography parameters:
+- Primary Color: ${theme.primaryColor || '#6366f1'} (Use for main interactive controls like buttons, highlights, primary text, links)
+- Secondary Color: ${theme.secondaryColor || '#4f46e5'} (Use for borders, hover states, secondary elements)
+- Accent Color: ${theme.accentColor || '#818cf8'} (Use for icons, subtle highlights, badges)
+- Background Color: ${theme.backgroundColor || '#090d16'} (Use for component cards, section backgrounds, container overlays)
+- Text Color: ${theme.textColor || '#f1f5f9'} (Use for paragraph texts, labels, secondary headers)
+- Font Family: ${theme.fontFamily || 'sans-serif'} (Apply to "fontFamily" property for typography consistency)
+- Border Radius: ${theme.borderRadius || '8px'} (Use for "borderRadius" property on buttons, cards, images, sections)
+- Box Shadow: ${theme.boxShadow || 'none'} (Use for "boxShadow" property on cards, buttons)
+
+Always map these properties into "styleOverrides" values in your JSON return structure where appropriate.
+`;
+  }
 
   return `You are GenovaX AI — a professional UI/UX layout architect for a component-based canvas builder.
 
@@ -173,6 +192,7 @@ ${catalog}
 ## ⚠️ REQUIRED Heights (use these exact pixel heights for each type)
 ${heightGuideText}
   For all other types use their defaultSize height from the catalog.
+${themeInstructions}
 
 ## Output Format (RETURN ONLY THIS JSON — no markdown, no backticks)
 {
@@ -191,6 +211,10 @@ ${heightGuideText}
         "brand": "YourBrand",
         "navLinks": "Home, About, Services, Contact",
         "buttonText": "Get Started"
+      },
+      "styleOverrides": {
+        "backgroundColor": "rgba(16, 23, 38, 0.9)",
+        "borderColor": "#1e293b"
       }
     },
     {
@@ -207,7 +231,10 @@ ${heightGuideText}
         "badge": "Launch Badge Text",
         "label": "Primary CTA Button"
       },
-      "imageKeyword": "relevant photo keyword"
+      "imageKeyword": "relevant photo keyword",
+      "styleOverrides": {
+        "borderRadius": "8px"
+      }
     },
     {
       "type": "business-services",
@@ -225,6 +252,9 @@ ${heightGuideText}
         "service2_text": "Description of second service.",
         "service3_title": "Service Three",
         "service3_text": "Description of third service."
+      },
+      "styleOverrides": {
+        "borderRadius": "8px"
       }
     },
     {
@@ -238,6 +268,9 @@ ${heightGuideText}
       "contentOverrides": {
         "brand": "YourBrand",
         "company": "YourBrand"
+      },
+      "styleOverrides": {
+        "backgroundColor": "rgba(16, 23, 38, 0.95)"
       }
     }
   ],
@@ -251,7 +284,7 @@ ${Object.entries(WEBSITE_TEMPLATES).map(([type, t]) => `- **${type}**: ${t.patte
 ## Layout Rules
 1. Always start with "nav-navbar" at y=0
 2. Next component starts at y = (previous y + previous height + 20)
-3. Full-width sections: x=50, width=900
+3. Full-width sections: x=50, width=900. Center them horizontally. Do not make x off-center.
 4. Use the EXACT heights from the Required Heights guide above
 5. Generate 7-11 components per page
 6. Always end with a footer (footer-block, footer-simple, or footer-copyright)
@@ -265,6 +298,11 @@ ${Object.entries(WEBSITE_TEMPLATES).map(([type, t]) => `- **${type}**: ${t.patte
 - service1_title, service2_title, service3_title = the 3 feature/service names
 - service1_text, service2_text, service3_text = their descriptions
 - Generate content SPECIFIC to the user's prompt topic — never leave defaults
+
+## DYNAMIC VARIATION RULES
+1. DO NOT return the example layouts verbatim. Always vary the order, selection, and copy details based on the user request.
+2. Mix and match component types creatively (e.g. use pricing cards, contact forms, testimonials, grids, timelines, and galleries dynamically).
+3. Vary styling, heights, borders, and copy to fit the requested domain name and topic.
 
 ## ABSOLUTE RULES
 1. ONLY use "type" values from the catalog — NEVER invent type names

@@ -148,12 +148,31 @@ export function detectPrototypeType(prompt: string): string {
 // System prompt builder
 // ---------------------------------------------------------------------------
 
-export function buildPrototypeSystemPrompt(siteType: string): string {
+export function buildPrototypeSystemPrompt(siteType: string, theme?: any): string {
   const catalog = buildSchemaCatalog();
   const template = SITE_PAGE_TEMPLATES[siteType] || SITE_PAGE_TEMPLATES.generic;
 
   const pagesGuide = template.pages.map(p => `"${p}"`).join(', ');
   const linksGuide = template.links.map(l => `  - ${l}`).join('\n');
+
+  let themeInstructions = '';
+  if (theme) {
+    themeInstructions = `
+## Selected Theme & Style Rules (CRITICAL)
+The user has chosen a specific visual theme. You MUST apply these theme settings to EACH component by setting style properties inside the "styleOverrides" field in the component JSON (e.g. "styleOverrides": { "backgroundColor": "#...", "color": "#...", "borderRadius": "..." }).
+Theme colors and typography parameters:
+- Primary Color: ${theme.primaryColor || '#6366f1'} (Use for main interactive controls like buttons, highlights, primary text, links)
+- Secondary Color: ${theme.secondaryColor || '#4f46e5'} (Use for borders, hover states, secondary elements)
+- Accent Color: ${theme.accentColor || '#818cf8'} (Use for icons, subtle highlights, badges)
+- Background Color: ${theme.backgroundColor || '#090d16'} (Use for component cards, section backgrounds, container overlays)
+- Text Color: ${theme.textColor || '#f1f5f9'} (Use for paragraph texts, labels, secondary headers)
+- Font Family: ${theme.fontFamily || 'sans-serif'} (Apply to "fontFamily" property for typography consistency)
+- Border Radius: ${theme.borderRadius || '8px'} (Use for "borderRadius" property on buttons, cards, images, sections)
+- Box Shadow: ${theme.boxShadow || 'none'} (Use for "boxShadow" property on cards, buttons)
+
+Always map these properties into "styleOverrides" values in your JSON return structure where appropriate.
+`;
+  }
 
   return `You are GenovaX AI — a professional UI/UX architect that generates complete multi-page website prototypes.
 
@@ -167,7 +186,7 @@ You use ONLY the pre-built component catalog listed below — no raw HTML or Rea
 - All components use ABSOLUTE positioning (x, y, width, height in pixels)
 - Components must NOT overlap vertically
 - Use sequential zIndex values starting from 1 within each page
-- Dark theme defaults: background #090d16, text #f1f5f9, primary #6366f1
+${themeInstructions}
 
 ## Available Component Types (use EXACT "type" values)
 ${catalog}
@@ -197,6 +216,11 @@ Return ONLY a valid JSON object. No markdown, no backticks, no extra text.
             "title": "<for section titles>",
             "brand": "<for navbar brand name>"
           },
+          "styleOverrides": {
+            "backgroundColor": "<matching background or secondary color>",
+            "color": "<matching text color>",
+            "borderRadius": "<matching border radius>"
+          },
           "imageKeyword": "<keyword for image components>"
         }
       ],
@@ -220,7 +244,7 @@ ${linksGuide}
 1. Start every page with a navbar (y=0, full width 900px, x=50)
 2. End every page with a footer
 3. Leave 20-30px vertical gaps between sections
-4. Full-width sections: width=900, x=50
+4. Full-width sections: width=900, x=50. Center them horizontally. Do not make x off-center.
 5. Generate 6-10 components per page
 6. Spread content across 800-1300px of vertical space per page
 7. For grids, use ONE grid component rather than individual cards
@@ -237,6 +261,10 @@ ${linksGuide}
 - Hero CTA buttons should link to the next logical page in the user journey
 - "Contact Us" / "Get in Touch" buttons should link to the contact page
 - Every page's navbar links should connect to other major pages
+
+## DYNAMIC VARIATION RULES
+1. DO NOT return identical layout plans for similar prompts. Introduce variations in component type selections, copy, ordering, and themes.
+2. Adapt design structure to fit the requested brand identity.
 
 ## Critical Rules
 - Return ONLY the JSON object — no markdown, no code fences, no explanation

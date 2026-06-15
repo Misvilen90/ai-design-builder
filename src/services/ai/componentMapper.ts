@@ -49,7 +49,51 @@ export function mapPlanToComponents(plan: AILayoutPlan): BuilderComponent[] {
     );
   }
 
-  return flattenEmbeddedControls(components);
+  // Programmatic Layout Normalization:
+  // Enforces perfect symmetry, centering, and professional vertical spacing (24px gap).
+  const sorted = [...components].sort((a, b) => a.position.top - b.position.top);
+  let currentTop = 20; 
+  const gap = 24;      
+
+  for (const comp of sorted) {
+    // Ignore sidebar positioning for custom dashboard templates
+    if (comp.type === 'nav-sidebar') {
+      comp.position.left = 50;
+      comp.position.top = 20;
+      comp.position.width = 200;
+      comp.position.height = 1200;
+      continue;
+    }
+
+    // Snap sections, headers, heroes, grids, and footers to full width (900px) and center them
+    if (
+      comp.position.width >= 700 || 
+      comp.type.includes('navbar') || 
+      comp.type.includes('hero') || 
+      comp.type.includes('footer') || 
+      comp.type.includes('section') || 
+      comp.type.includes('profile') ||
+      comp.type.includes('grid') ||
+      comp.type.includes('table') ||
+      comp.type.includes('gallery') ||
+      comp.type.includes('pricing') ||
+      comp.type.includes('about') ||
+      comp.type.includes('testimonial') ||
+      comp.type.includes('timeline') ||
+      comp.type.includes('comparison')
+    ) {
+      comp.position.left = 50;
+      comp.position.width = 900;
+    } else {
+      // Center smaller elements (buttons, inputs) in the content area
+      comp.position.left = Math.round(50 + (900 - comp.position.width) / 2);
+    }
+
+    comp.position.top = currentTop;
+    currentTop += comp.position.height + gap;
+  }
+
+  return sorted;
 }
 
 // ---------------------------------------------------------------------------
@@ -104,6 +148,7 @@ function mapSingleComponent(
     style: {
       backgroundColor: 'transparent',
       ...style,
+      ...(entry.styleOverrides || {}),
     },
     position: {
       left: Math.max(0, Math.round(entry.x ?? 50)),

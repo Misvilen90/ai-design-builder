@@ -3,7 +3,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
-const PROVIDER_ORDER = ['gemini', 'groq', 'openrouter', 'openai'];
+const PROVIDER_ORDER = ['openai', 'gemini', 'groq', 'openrouter'];
 
 function getApiKeys() {
   return {
@@ -19,7 +19,7 @@ function getConfiguredProviders() {
   return PROVIDER_ORDER.filter(name => keys[name]);
 }
 
-async function callWithRetryAndTimeout(fn, maxRetries = 3, delayMs = 2000, timeoutMs = 30000) {
+async function callWithRetryAndTimeout(fn, maxRetries = 3, delayMs = 2000, timeoutMs = 90000) {
   let lastError;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -46,7 +46,7 @@ async function callGemini(prompt) {
   if (!apiKey) throw new Error('Gemini API key not configured on server.');
 
   const configuredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const fallbackModels = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+  const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'];
   const modelsToTry = Array.from(new Set([configuredModel, ...fallbackModels]));
 
   let lastError;
@@ -78,7 +78,7 @@ async function callGemini(prompt) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
         if (!text) throw new Error('Gemini returned an empty response.');
         return text;
-      }, 2, 1500, 15000);
+      }, 2, 2000, 60000);
       return text;
     } catch (err) {
       lastError = err;
@@ -93,7 +93,7 @@ async function callGroq(prompt) {
   if (!apiKey) throw new Error('Groq API key not configured on server.');
 
   const configuredModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
-  const fallbackModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it'];
+  const fallbackModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.1-70b-versatile'];
   const modelsToTry = Array.from(new Set([configuredModel, ...fallbackModels]));
 
   let lastError;
@@ -128,7 +128,7 @@ async function callGroq(prompt) {
         const text = data?.choices?.[0]?.message?.content?.trim();
         if (!text) throw new Error('Groq returned an empty response.');
         return text;
-      }, 2, 1500, 15000);
+      }, 2, 2000, 45000);
       return text;
     } catch (err) {
       lastError = err;
@@ -184,7 +184,7 @@ async function callOpenRouter(prompt) {
         const text = data?.choices?.[0]?.message?.content?.trim();
         if (!text) throw new Error('OpenRouter returned an empty response.');
         return text;
-      }, 2, 1500, 20000);
+      }, 2, 2000, 60000);
       return text;
     } catch (err) {
       lastError = err;
@@ -218,6 +218,7 @@ async function callOpenAI(prompt) {
             messages: [{ role: 'user', content: prompt }],
             temperature: 0.7,
             max_tokens: 3000,
+            response_format: { type: 'json_object' },
           }),
         });
 
@@ -233,7 +234,7 @@ async function callOpenAI(prompt) {
         const text = data?.choices?.[0]?.message?.content?.trim();
         if (!text) throw new Error('OpenAI returned an empty response.');
         return text;
-      }, 2, 1500, 20000);
+      }, 2, 2000, 60000);
       return text;
     } catch (err) {
       lastError = err;

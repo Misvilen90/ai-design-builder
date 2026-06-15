@@ -31,7 +31,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
   onClose,
   onShowLoading
 }) => {
-  const { setPages, setActivePageId, activePageId, pages, theme } = useBuilderStore();
+  const { setPages, setActivePageId, activePageId, pages, theme, saveProject } = useBuilderStore();
   const { provider } = useAIStore();
 
   const [promptValue, setPromptValue] = useState('');
@@ -228,6 +228,8 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
           setPages(updatedPages);
         }
       }
+      
+      saveProject();
 
       setRefineMode(false);
       onShowLoading(false);
@@ -285,7 +287,8 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
 
   const providerLabel = provider === 'auto' ? 'Auto (failover)' :
     provider === 'gemini' ? 'Gemini' :
-    provider === 'groq' ? 'Groq' : 'OpenRouter';
+    provider === 'groq' ? 'Groq' :
+    provider === 'openai' ? 'ChatGPT (OpenAI)' : 'OpenRouter';
 
   const isPrototype = mode === 'prototype';
 

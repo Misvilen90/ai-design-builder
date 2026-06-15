@@ -251,6 +251,83 @@ export const RightPanel: React.FC = () => {
     );
   };
 
+  // Parses the inner HTML of cohesive layouts to dynamically render inputs for headings, text, buttons, list items, and image links
+  const renderHtmlTextFields = (comp: any, isLocked: boolean) => {
+    const html = comp.content.html;
+    if (!html || typeof html !== 'string') return null;
+
+    // Matches headings, paragraphs, spans, buttons, list items, and image sources
+    const regex = /(<button[^>]*>[\s\S]*?<\/button>|<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>|<p[^>]*>[\s\S]*?<\/p>|<span[^>]*>[\s\S]*?<\/span>|<li[^>]*>[\s\S]*?<\/li>|src="https:\/\/images\.unsplash\.com\/[^"]+"|src="https:\/\/images\.unsplash\.com\/[^"]+)/gi;
+    const matches = [...html.matchAll(regex)];
+
+    if (matches.length === 0) return null;
+
+    // Filter duplicates to keep UI clean
+    const seenTags = new Set<string>();
+    const uniqueMatches: typeof matches = [];
+    for (const match of matches) {
+      if (!seenTags.has(match[0])) {
+        seenTags.add(match[0]);
+        uniqueMatches.push(match);
+      }
+    }
+
+    return (
+      <div className="space-y-1.5 mt-2 border-t border-slate-800/40 pt-2">
+        <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Editable Elements</span>
+        {uniqueMatches.map((match, idx) => {
+          const fullTag = match[0];
+          let label = '';
+          let value = '';
+          let isImage = false;
+
+          if (fullTag.startsWith('src=')) {
+            isImage = true;
+            label = `Image Link #${idx + 1}`;
+            const srcVal = fullTag.match(/src="([^"]+)"/);
+            value = srcVal ? srcVal[1] : '';
+          } else {
+            const tagName = fullTag.match(/^<([a-z0-9]+)/i)?.[1]?.toLowerCase() || 'tag';
+            label = `${tagName.toUpperCase()} Text #${idx + 1}`;
+            value = fullTag.replace(/<[^>]+>/g, '').trim();
+          }
+
+          if (!value && !isImage) return null;
+
+          return (
+            <div key={idx} className="flex flex-col gap-0.5">
+              <label className="text-slate-500 text-[8px]" htmlFor={`emb-${comp.id}-${idx}`}>{label}</label>
+              <textarea
+                id={`emb-${comp.id}-${idx}`}
+                value={value}
+                disabled={isLocked}
+                onChange={e => {
+                  const newValue = e.target.value;
+                  let newHtml = comp.content.html;
+                  if (isImage) {
+                    newHtml = newHtml.replace(fullTag, `src="${newValue}"`);
+                  } else {
+                    const startTagMatch = fullTag.match(/^<[a-z0-9]+[^>]*>/i);
+                    const endTagMatch = fullTag.match(/<\/[a-z0-9]+>$/i);
+                    if (startTagMatch && endTagMatch) {
+                      const newTag = `${startTagMatch[0]}${newValue}${endTagMatch[0]}`;
+                      newHtml = newHtml.replace(fullTag, newTag);
+                    }
+                  }
+                  updateComponentContent(comp.id, { html: newHtml });
+                }}
+                rows={value.length > 30 ? 2 : 1}
+                className={`w-full text-[9px] p-1 rounded border outline-none bg-black/25 resize-none ${
+                  theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                }`}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Settings Content Renderer
   const renderSettingsContent = (comp: any, isLocked: boolean, isVisible: boolean) => {
     const showAdv = showAdvanced.settings;
@@ -298,7 +375,24 @@ export const RightPanel: React.FC = () => {
               className={`w-full text-[9px] p-0.5 px-1 rounded border outline-none bg-black/25 ${
                 theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
               }`}
-    
+     
+            />
+          </div>
+        )}
+
+        {renderHtmlTextFields(comp, isLocked)}
+
+        {comp.content.html !== undefined && (
+          <div className="flex flex-col gap-0.5 mt-2 border-t border-slate-800/40 pt-2">
+            <label className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Raw HTML Editor</label>
+            <textarea
+              aria-label="HTML content"
+              value={comp.content.html}
+              disabled={isLocked}
+              onChange={e => updateComponentContent(comp.id, { html: e.target.value })}
+              className={`w-full text-[9px] p-1 rounded border outline-none h-24 bg-black/25 resize-none font-mono ${
+                theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+              }`}
             />
           </div>
         )}

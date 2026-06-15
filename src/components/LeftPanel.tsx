@@ -283,6 +283,11 @@ export const LeftPanel: React.FC = () => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!leftPanelExpanded) return;
       const target = e.target as HTMLElement;
+      
+      // Ignore click-outside logic for detached elements or dropdown options/menus to prevent unwanted panel closure
+      if (!target || !document.body.contains(target)) return;
+      if (target.tagName === 'OPTION' || target.closest('select')) return;
+
       if (target.closest('main') || target.closest('header') || target.closest('.right-panel-container')) {
         if (!target.closest('.left-panel-container') && !target.closest('.slim-sidebar-bar')) {
           setLeftPanelExpanded(false);

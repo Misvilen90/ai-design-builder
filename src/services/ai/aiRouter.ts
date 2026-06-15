@@ -4,7 +4,7 @@ import type {
   AIPrototypePlan,
   PrototypeGenerationResult,
 } from './types';
-import type { Page } from '../../store/useBuilderStore';
+import { useBuilderStore, type Page } from '../../store/useBuilderStore';
 import { useAIStore } from '../../store/useAIStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { buildSystemPrompt as buildLayoutSystemPrompt } from './layoutPlanner';
@@ -76,7 +76,8 @@ export async function generateLayout(
   store.setLastError(null);
 
   try {
-    const systemPrompt = buildLayoutSystemPrompt();
+    const globalTheme = useBuilderStore.getState().globalTheme;
+    const systemPrompt = buildLayoutSystemPrompt(globalTheme);
     const combinedPrompt = `${systemPrompt}\n\nUser Request: ${userPrompt}\n\nGenerate the layout plan now. Return ONLY the JSON object.`;
 
     const result = await callBackendGenerate(combinedPrompt, 'layout', provider);
@@ -130,7 +131,8 @@ export async function generatePrototype(
 
   try {
     const siteType = detectPrototypeType(userPrompt);
-    const systemPrompt = buildPrototypeSystemPrompt(siteType);
+    const globalTheme = useBuilderStore.getState().globalTheme;
+    const systemPrompt = buildPrototypeSystemPrompt(siteType, globalTheme);
     const combinedPrompt = `${systemPrompt}\n\nUser Request: ${userPrompt}\n\nGenerate the full multi-page prototype plan now. Return ONLY the JSON object.`;
 
     const result = await callBackendGenerate(
@@ -251,7 +253,8 @@ export async function refineLayout(
   store.setLastError(null);
 
   try {
-    const systemPrompt = buildLayoutSystemPrompt();
+    const globalTheme = useBuilderStore.getState().globalTheme;
+    const systemPrompt = buildLayoutSystemPrompt(globalTheme);
     const combinedPrompt = `${systemPrompt}
 
 ## CURRENT LAYOUT CONTEXT

@@ -3,6 +3,7 @@ import { useBuilderStore, BuilderComponent } from '../store/useBuilderStore';
 import { COMPONENT_SCHEMAS } from '../store/schemas';
 import { RefreshCw, Trash2, Copy, Lock, Paintbrush, Search } from 'lucide-react';
 import { ComponentsPanel } from './ComponentsPanel';
+import { getThemeStylesheet } from '../utils/themeStyles';
 
 export const CanvasWorkspace: React.FC = () => {
   const { 
@@ -675,7 +676,7 @@ export const CanvasWorkspace: React.FC = () => {
         onDrop={handleDrop}
       >
         <div 
-          className={`relative min-h-[1400px] shadow-2xl transition-all duration-300 ${getViewportWidth()} ${
+          className={`relative min-h-[1400px] shadow-2xl transition-all duration-300 canvas-theme-scope ${getViewportWidth()} ${
             theme === 'dark' 
               ? 'bg-[#090d16] grid-bg-overlay' 
               : 'bg-white grid-bg-overlay-light'
@@ -694,6 +695,8 @@ export const CanvasWorkspace: React.FC = () => {
           }}
           onContextMenu={handleContextMenu}
         >
+          {/* Inject dynamic stylesheet mapped to global theme parameters */}
+          <style dangerouslySetInnerHTML={{ __html: getThemeStylesheet(globalTheme) }} />
           {/* Render component layer nodes (sorted so higher z-index stacks on top) */}
           {[...components].sort((a, b) => a.position.zIndex - b.position.zIndex).map((comp) => {
             const isSelected = selectedComponentId === comp.id;

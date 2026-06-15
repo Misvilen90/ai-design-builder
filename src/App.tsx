@@ -16,7 +16,6 @@ import {
   createProject
 } from './services/projectApi';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { flattenEmbeddedControls } from './services/ai/extractEmbeddedControls';
 import{
   Sparkles, 
   Layers, 
@@ -188,11 +187,7 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
       try {
         const parsed = JSON.parse(savedPages);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const flattenedPages = parsed.map((page: any) => ({
-            ...page,
-            components: flattenEmbeddedControls(page.components || []),
-          }));
-          useBuilderStore.setState({ pages: flattenedPages });
+          useBuilderStore.setState({ pages: parsed });
           if (savedActivePage) {
             useBuilderStore.setState({ activePageId: savedActivePage });
           }
@@ -252,7 +247,7 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
   // Helper to load template into active canvas page
   const handleSelectTemplate = (_templateId: string, comps: any[]) => {
     const updatedPages = pages.map(page => 
-      page.id === activePageId ? { ...page, components: flattenEmbeddedControls(comps) } : page
+      page.id === activePageId ? { ...page, components: comps } : page
     );
     useBuilderStore.getState().setPages(updatedPages);
     setCurrentView('builder');
