@@ -71,7 +71,6 @@ export const RightPanel: React.FC = () => {
     updateComponentContent,
     toggleComponentLock,
     toggleComponentVisibility,
-    setPrototypeDestination,
     moveComponentOrder,
     theme,
     rightPanelWidth,
@@ -115,7 +114,7 @@ export const RightPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'properties' | 'layers' | 'history'>('properties');
 
   // Single-expanded accordion section in Properties tab
-  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype' | null>('settings');
+  const [activeSection, setActiveSection] = useState<'settings' | 'layout' | 'typography' | 'colors' | 'effects' | null>('settings');
 
   // Advanced options toggle states
   const [showAdvanced, setShowAdvanced] = useState({
@@ -211,7 +210,6 @@ export const RightPanel: React.FC = () => {
   return (
     <div className="space-y-1">
       {renderAccordionSection('settings', '⚙️ Settings', renderSettingsContent)}
-      {renderAccordionSection('prototype', '🔗 Prototype Link', renderPrototypeContent)}
       {renderAccordionSection('layout', '📐 Layout', renderLayoutContent)}
       {renderAccordionSection('typography', '🔤 Typography', renderTypographyContent)}
       {renderAccordionSection('colors', '🎨 Colors', renderColorsContent)}
@@ -221,7 +219,7 @@ export const RightPanel: React.FC = () => {
 };
   // Helper to render an accordion section
   const renderAccordionSection = (
-    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects' | 'prototype', 
+    id: 'settings' | 'layout' | 'typography' | 'colors' | 'effects', 
     label: string, 
     contentRenderer: (comp: any, isLocked: boolean, isVisible: boolean) => React.ReactNode
   ) => {
@@ -249,39 +247,6 @@ export const RightPanel: React.FC = () => {
             {contentRenderer(selectedComponent, isLocked, isVisible)}
           </div>
         )}
-      </div>
-    );
-  };
-
-  // Prototype Content Renderer
-  const renderPrototypeContent = (comp: any, isLocked: boolean) => {
-    return (
-      <div className="space-y-1.5">
-        <div className="flex flex-col gap-1">
-          <label className="text-slate-500 font-semibold">Redirect to Page</label>
-          <select
-            value={comp.prototypeDestination || ''}
-            disabled={isLocked}
-            onChange={e => {
-              const targetPageId = e.target.value || null;
-              setPrototypeDestination(comp.id, targetPageId);
-            }}
-            className={`w-full text-[9px] p-1 rounded border outline-none bg-[#101726]/60 ${
-              theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
-            }`}
-          >
-            <option value="">(None - No Redirect)</option>
-            {pages.map(p => (
-              <option key={p.id} value={p.id}>
-                📄 {p.name} {p.id === activePageId ? '(Current)' : ''}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="text-[8px] text-slate-400 leading-normal bg-indigo-500/10 border border-indigo-500/20 rounded p-1.5 mt-1 flex gap-1">
-          <span className="shrink-0">💡</span>
-          <span>In Preview Mode, clicking this component will redirect users to the selected page.</span>
-        </div>
       </div>
     );
   };

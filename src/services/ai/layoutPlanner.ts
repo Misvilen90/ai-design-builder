@@ -7,25 +7,140 @@ import { buildSchemaCatalog } from './schemaCatalog';
 
 // Canvas dimensions
 const CANVAS_WIDTH = 1000;
-const CANVAS_HEIGHT = 1400;
+const CANVAS_HEIGHT = 1600;
 
 // ---------------------------------------------------------------------------
 // Website type layout templates (guidance for the AI)
 // ---------------------------------------------------------------------------
 
-const WEBSITE_TEMPLATES: Record<string, string> = {
-  saas: `navbar → hero → features/services grid → pricing cards → testimonials → CTA section → newsletter → footer`,
-  ecommerce: `navbar → hero banner → category grid → product grid (3-col) → product details → testimonials → newsletter → footer`,
-  portfolio: `navbar → hero → skills/services section → project gallery → about section → contact form → footer`,
-  agency: `navbar → hero → services grid → team section → company profile → testimonials → CTA → footer`,
-  restaurant: `navbar → hero → menu/specials grid → about section → image gallery → contact form → footer`,
-  coffee: `navbar → hero → menu/specials grid → about section → testimonials → newsletter → footer`,
-  education: `navbar → hero → course/features grid → testimonials → pricing → CTA → newsletter → footer`,
-  healthcare: `navbar → hero → services grid → team section → about → contact form → testimonials → footer`,
-  electronics: `navbar → hero → category grid → product grid → product details → testimonials → newsletter → footer`,
-  dashboard: `sidebar (left) → header → stats grid → data table → charts area`,
-  blog: `navbar → hero → featured post → post grid → newsletter → footer`,
-  landing: `navbar → hero → features → testimonials → pricing → CTA → footer`,
+const WEBSITE_TEMPLATES: Record<string, { pattern: string; components: string[] }> = {
+  saas: {
+    pattern: 'navbar → hero → features/services → pricing → testimonials → CTA → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'card-pricing', 'marketing-testimonials', 'marketing-cta', 'marketing-newsletter', 'footer-block']
+  },
+  ecommerce: {
+    pattern: 'navbar → hero → category grid → product grid → testimonials → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'ecommerce-grid', 'marketing-testimonials', 'marketing-newsletter', 'footer-block']
+  },
+  portfolio: {
+    pattern: 'navbar → hero → skills/services → gallery → about → contact form → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'media-gallery', 'business-about', 'form-contact', 'footer-simple']
+  },
+  agency: {
+    pattern: 'navbar → hero → services → team → profile → testimonials → CTA → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'business-team', 'business-profile', 'marketing-testimonials', 'marketing-cta', 'footer-block']
+  },
+  restaurant: {
+    pattern: 'navbar → hero → services (menu/specials) → about → gallery → contact form → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'business-about', 'media-gallery', 'form-contact', 'footer-simple']
+  },
+  coffee: {
+    pattern: 'navbar → hero → services (drinks/menu) → about → testimonials → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'business-about', 'marketing-testimonials', 'marketing-newsletter', 'footer-simple']
+  },
+  education: {
+    pattern: 'navbar → hero → services (courses) → testimonials → pricing → CTA → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'marketing-testimonials', 'card-pricing', 'marketing-cta', 'footer-block']
+  },
+  healthcare: {
+    pattern: 'navbar → hero → services → team → about → contact form → testimonials → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'business-team', 'business-about', 'form-contact', 'marketing-testimonials', 'footer-simple']
+  },
+  electronics: {
+    pattern: 'navbar → hero → services (categories) → product grid → testimonials → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'ecommerce-grid', 'marketing-testimonials', 'marketing-newsletter', 'footer-block']
+  },
+  dashboard: {
+    pattern: 'sidebar → header → stats/content area',
+    components: ['nav-sidebar', 'nav-navbar', 'layout-grid']
+  },
+  blog: {
+    pattern: 'navbar → hero → featured post → post grid → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'card-feature', 'layout-grid', 'marketing-newsletter', 'footer-simple']
+  },
+  landing: {
+    pattern: 'navbar → hero → features → testimonials → pricing → CTA → footer',
+    components: ['nav-navbar', 'marketing-hero', 'business-services', 'marketing-testimonials', 'card-pricing', 'marketing-cta', 'footer-simple']
+  },
+
+  // ── New layout patterns ─────────────────────────────────────
+
+  'grid-dashboard': {
+    pattern: 'sidebar → header → stats grid → activity chart → recent projects → team → footer',
+    components: ['nav-sidebar', 'nav-navbar', 'stats-counters', 'layout-grid', 'content-table', 'business-team', 'footer-simple']
+  },
+  'asymmetric-magazine': {
+    pattern: 'navbar → large hero (2/3 width) → sidebar panel (1/3) → split gallery → testimonials → newsletter → footer',
+    components: ['nav-navbar-centered', 'marketing-hero-split', 'business-profile', 'media-gallery', 'marketing-testimonials', 'marketing-newsletter', 'footer-block']
+  },
+  'sidebar-layout': {
+    pattern: 'sidebar navigation → top header bar → main content area (stats + table + cards) → footer',
+    components: ['nav-sidebar', 'nav-navbar', 'stats-counters', 'content-table', 'card-feature', 'footer-simple']
+  },
+  'showcase-portfolio': {
+    pattern: 'transparent navbar → centered hero with large title → project grid (2×2) → about + stats → testimonials → contact form → minimal footer',
+    components: ['nav-navbar-transparent', 'marketing-hero-centered', 'layout-grid', 'business-about', 'stats-counters', 'marketing-testimonials', 'form-contact', 'footer-minimal']
+  },
+  'saas-pricing': {
+    pattern: 'navbar → hero → social proof logos → pricing table (3 tiers) → feature comparison → CTA → newsletter → footer',
+    components: ['nav-navbar', 'marketing-hero', 'stats-counters', 'card-pricing-table', 'content-comparison', 'marketing-cta', 'marketing-newsletter', 'footer-block']
+  },
+  'mobile-app': {
+    pattern: 'glass navbar → centered hero with app mockup → feature cards (3) → timeline roadmap → FAQ → CTA → minimal footer',
+    components: ['nav-navbar-transparent', 'marketing-hero-centered', 'card-feature', 'content-timeline', 'marketing-faq', 'marketing-cta', 'footer-minimal']
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Height guidance for each component type
+// ---------------------------------------------------------------------------
+
+const COMPONENT_HEIGHT_GUIDE: Record<string, number> = {
+  'nav-navbar': 64,
+  'marketing-hero': 360,
+  'business-services': 300,
+  'business-team': 300,
+  'business-profile': 260,
+  'business-about': 300,
+  'marketing-testimonials': 280,
+  'marketing-newsletter': 160,
+  'marketing-cta': 180,
+  'marketing-faq': 260,
+  'ecommerce-grid': 320,
+  'ecommerce-details': 340,
+  'ecommerce-cart': 340,
+  'ecommerce-checkout': 340,
+  'card-pricing': 340,
+  'card-feature': 180,
+  'card-basic': 180,
+  'card-product': 300,
+  'card-testimonial': 180,
+  'form-contact': 280,
+  'form-login': 260,
+  'form-register': 320,
+  'footer-block': 280,
+  'footer-simple': 120,
+  'footer-copyright': 80,
+  'footer-social': 160,
+  'media-gallery': 220,
+  'media-image': 240,
+  'media-carousel': 320,
+  'nav-sidebar': 500,
+  'nav-menu': 54,
+  'nav-tabs': 60,
+  'layout-section': 300,
+  'layout-grid': 200,
+  'layout-cookie-banner': 80,
+  'nav-navbar-centered': 64,
+  'nav-navbar-transparent': 64,
+  'marketing-hero-centered': 360,
+  'marketing-hero-split': 360,
+  'stats-counters': 140,
+  'content-timeline': 300,
+  'content-comparison': 260,
+  'card-pricing-table': 340,
+  'form-search': 42,
+  'footer-minimal': 48,
 };
 
 // ---------------------------------------------------------------------------
@@ -35,78 +150,127 @@ const WEBSITE_TEMPLATES: Record<string, string> = {
 export function buildSystemPrompt(): string {
   const catalog = buildSchemaCatalog();
 
-  return `You are GenovaX AI — a professional UI/UX layout architect for a Figma-like canvas builder.
+  const heightGuideText = Object.entries(COMPONENT_HEIGHT_GUIDE)
+    .map(([type, h]) => `  "${type}": ${h}px tall`)
+    .join('\n');
 
-## Your Task
-Given a user's description, create a detailed layout plan using ONLY the pre-built components listed below. You do NOT generate HTML or React code. You select, arrange, and customise existing components.
+  return `You are GenovaX AI — a professional UI/UX layout architect for a component-based canvas builder.
+
+## CRITICAL INSTRUCTION
+You MUST use ONLY the exact "type" strings listed in the Component Catalog below.
+Using any other type string will cause that component to be silently dropped and not rendered.
 
 ## Canvas Specifications
-- Canvas size: ${CANVAS_WIDTH}px wide × ${CANVAS_HEIGHT}px tall
-- All components use ABSOLUTE positioning (x, y, width, height in pixels)
-- Components must NOT overlap
-- Use sequential zIndex values starting from 1
-- Dark theme defaults: background #090d16, text #f1f5f9, primary #6366f1
+- Canvas: ${CANVAS_WIDTH}px wide × ${CANVAS_HEIGHT}px tall (absolute positioning)
+- Components are positioned absolutely with x (left offset), y (top offset), width, height
+- Components must NOT overlap. Stack them vertically with 20px gaps.
+- Start at y=0 for the navbar
+- Use sequential zIndex values (1, 2, 3...)
 
-## Available Component Types (use EXACT "type" values)
+## ✅ Available Component Types (COPY THESE EXACTLY)
 ${catalog}
 
-## Output Format
-Return ONLY a valid JSON object (no markdown, no backticks, no explanation). The JSON must match this exact schema:
+## ⚠️ REQUIRED Heights (use these exact pixel heights for each type)
+${heightGuideText}
+  For all other types use their defaultSize height from the catalog.
 
+## Output Format (RETURN ONLY THIS JSON — no markdown, no backticks)
 {
-  "pageName": "<descriptive page name>",
-  "description": "<1-2 sentence description of the layout>",
+  "pageName": "Page Name",
+  "description": "Brief description",
   "components": [
     {
-      "type": "<EXACT component type from the catalog above>",
-      "name": "<descriptive display name>",
-      "x": <number>,
-      "y": <number>,
-      "width": <number>,
-      "height": <number>,
-      "zIndex": <number>,
+      "type": "nav-navbar",
+      "name": "Main Navigation",
+      "x": 50,
+      "y": 0,
+      "width": 900,
+      "height": 64,
+      "zIndex": 1,
       "contentOverrides": {
-        "text": "<for headings/paragraphs>",
-        "label": "<for buttons>",
-        "title": "<for sections with titles>"
+        "brand": "YourBrand",
+        "navLinks": "Home, About, Services, Contact",
+        "buttonText": "Get Started"
+      }
+    },
+    {
+      "type": "marketing-hero",
+      "name": "Hero Section",
+      "x": 50,
+      "y": 84,
+      "width": 900,
+      "height": 360,
+      "zIndex": 2,
+      "contentOverrides": {
+        "title": "Your Hero Heading Here",
+        "text": "Your hero description text. Make it compelling.",
+        "badge": "Launch Badge Text",
+        "label": "Primary CTA Button"
       },
-      "imageKeyword": "<keyword for image components, e.g. 'coffee shop interior'>"
+      "imageKeyword": "relevant photo keyword"
+    },
+    {
+      "type": "business-services",
+      "name": "Services Section",
+      "x": 50,
+      "y": 464,
+      "width": 900,
+      "height": 300,
+      "zIndex": 3,
+      "contentOverrides": {
+        "title": "Our Services",
+        "service1_title": "Service One",
+        "service1_text": "Description of first service.",
+        "service2_title": "Service Two",
+        "service2_text": "Description of second service.",
+        "service3_title": "Service Three",
+        "service3_text": "Description of third service."
+      }
+    },
+    {
+      "type": "footer-block",
+      "name": "Footer",
+      "x": 50,
+      "y": 1400,
+      "width": 900,
+      "height": 280,
+      "zIndex": 10,
+      "contentOverrides": {
+        "brand": "YourBrand",
+        "company": "YourBrand"
+      }
     }
   ],
-  "imageKeywords": ["<global keyword 1>", "<keyword 2>", "..."]
+  "imageKeywords": ["keyword1", "keyword2"]
 }
 
+## Website Layout Patterns (follow these for the given site type)
+${Object.entries(WEBSITE_TEMPLATES).map(([type, t]) => `- **${type}**: ${t.pattern}
+  Components to use (in order): ${t.components.join(' → ')}`).join('\n')}
+
 ## Layout Rules
-1. Start the first component (usually navbar) at y=0
-2. Leave 20-30px vertical gaps between sections
-3. Full-width sections: width=900, x=50 (centered on 1000px canvas)
-4. Side-by-side cards: divide available width evenly with gaps
-5. Generate 6-12 components for a typical full page
-6. Always include a navbar/header at top and footer at bottom
-7. Use the full canvas height — spread content across 800-1400px of vertical space
-8. For grids with multiple items (product grid, features), use ONE grid component rather than individual cards
-9. Select the most appropriate component type for each section
+1. Always start with "nav-navbar" at y=0
+2. Next component starts at y = (previous y + previous height + 20)
+3. Full-width sections: x=50, width=900
+4. Use the EXACT heights from the Required Heights guide above
+5. Generate 7-11 components per page
+6. Always end with a footer (footer-block, footer-simple, or footer-copyright)
+7. Spread content across 1000-1400px total vertical space
 
-## Content Intelligence
-- Generate contextually relevant text for contentOverrides based on the user's prompt
-- For headings, write compelling titles that match the website topic
-- For paragraphs, write descriptive copy relevant to the business
-- For buttons, use action-oriented labels (e.g., "Shop Now", "Get Started", "Book Appointment")
-- For image components, provide specific imageKeyword that will find relevant stock photos
+## Content Rules
+- brand/company = website/brand name (appear in navbar & footer)
+- title = main heading text for sections
+- text/description = body paragraph copy
+- label/buttonText = button call-to-action text
+- service1_title, service2_title, service3_title = the 3 feature/service names
+- service1_text, service2_text, service3_text = their descriptions
+- Generate content SPECIFIC to the user's prompt topic — never leave defaults
 
-## Website Type Patterns
-When the user describes a specific type of website, follow these proven layout patterns:
-${Object.entries(WEBSITE_TEMPLATES)
-  .map(([type, pattern]) => `- ${type}: ${pattern}`)
-  .join('\n')}
-
-## Critical Rules
-- Use ONLY component types from the catalog above — no custom types
-- Return ONLY the JSON object — no markdown, no code fences, no explanation
-- The JSON must be parseable by JSON.parse()
-- Every component MUST have: type, name, x, y, width, height, zIndex
-- contentOverrides is optional but strongly recommended for text-based components
-- imageKeyword is required for media-image components`;
+## ABSOLUTE RULES
+1. ONLY use "type" values from the catalog — NEVER invent type names
+2. Return ONLY the JSON object — no markdown, no \`\`\`, no text before/after
+3. Every component needs: type, name, x, y, width, height, zIndex
+4. Heights MUST match the Required Heights guide or the component will render incorrectly`;
 }
 
 /**
@@ -129,6 +293,12 @@ export function detectWebsiteType(prompt: string): string {
     dashboard: ['dashboard', 'admin', 'panel', 'analytics', 'metrics', 'crm'],
     blog: ['blog', 'article', 'news', 'magazine', 'journal'],
     landing: ['landing', 'launch', 'coming soon', 'waitlist'],
+    'grid-dashboard': ['dashboard', 'admin', 'analytics', 'metrics', 'crm', 'management'],
+    'asymmetric-magazine': ['magazine', 'editorial', 'blog magazine', 'content site', 'publication'],
+    'sidebar-layout': ['sidebar', 'side navigation', 'app layout', 'web app'],
+    'showcase-portfolio': ['showcase', 'creative portfolio', 'designer', 'photography', 'artist portfolio'],
+    'saas-pricing': ['pricing page', 'comparison', 'plans', 'subscription'],
+    'mobile-app': ['mobile app', 'app landing', 'app showcase', 'ios app', 'android app'],
   };
 
   for (const [type, keywords] of Object.entries(typeKeywords)) {

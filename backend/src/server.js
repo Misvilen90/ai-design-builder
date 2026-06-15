@@ -12,7 +12,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
     credentials: true,
   })
 );
@@ -20,12 +20,14 @@ app.use(
 app.use(express.json());
 
 const projectRoutes = require("./routes/projectRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 app.get("/", (req, res) => {
-  res.send("Member 4 Backend Running");
+  res.send("GenovaX Backend Running");
 });
 
 app.use("/api/projects", projectRoutes);
+app.use("/api/ai", aiRoutes);
 
 const PORT = process.env.PORT || 5000;
 

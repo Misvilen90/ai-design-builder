@@ -721,17 +721,6 @@ export const CanvasWorkspace: React.FC = () => {
                   selectedComponentIds.includes(comp.id) ? 'ring-1.5 ring-indigo-500' : 'hover:ring-1 hover:ring-indigo-500/40'
                 }`}
               >
-                {/* Prototyping Link Badge Indicator */}
-                {comp.prototypeDestination && (
-                  <div 
-                    className="absolute -top-5 right-1 bg-indigo-600/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow z-40 flex items-center gap-1 select-none pointer-events-none"
-                    title={`Prototype link to: ${pages.find(p => p.id === comp.prototypeDestination)?.name || comp.prototypeDestination}`}
-                  >
-                    <span>🔗</span>
-                    <span>{pages.find(p => p.id === comp.prototypeDestination)?.name || 'Link'}</span>
-                  </div>
-                )}
-
                 {/* Element Inner Content Renderer */}
                 <div 
                   className="w-full h-full overflow-hidden relative select-text"

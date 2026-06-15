@@ -131,6 +131,54 @@ export const TYPE_ALIASES: Record<string, string> = {
   'checkout': 'ecommerce-checkout',
   'checkout-form': 'ecommerce-checkout',
 
+  // Navbar variants
+  'centered-navbar': 'nav-navbar-centered',
+  'navbar-centered': 'nav-navbar-centered',
+  'nav-centered': 'nav-navbar-centered',
+  'glass-navbar': 'nav-navbar-transparent',
+  'navbar-transparent': 'nav-navbar-transparent',
+  'transparent-navbar': 'nav-navbar-transparent',
+
+  // Hero variants
+  'centered-hero': 'marketing-hero-centered',
+  'hero-centered': 'marketing-hero-centered',
+  'hero-center': 'marketing-hero-centered',
+  'split-hero': 'marketing-hero-split',
+  'hero-split': 'marketing-hero-split',
+
+  // Stats
+  'stats': 'stats-counters',
+  'counters': 'stats-counters',
+  'stats-section': 'stats-counters',
+  'statistics': 'stats-counters',
+
+  // Timeline
+  'timeline': 'content-timeline',
+  'project-timeline': 'content-timeline',
+
+  // Comparison
+  'comparison': 'content-comparison',
+  'comparison-table': 'content-comparison',
+  'feature-comparison': 'content-comparison',
+
+  // Pricing table
+  'pricing-table': 'card-pricing-table',
+  'pricing-tiers': 'card-pricing-table',
+
+  // Cookie banner
+  'cookie-banner': 'layout-cookie-banner',
+  'cookies': 'layout-cookie-banner',
+  'gdpr': 'layout-cookie-banner',
+
+  // Search
+  'search': 'form-search',
+  'search-bar': 'form-search',
+  'search-input': 'form-search',
+
+  // Footer variants
+  'minimal-footer': 'footer-minimal',
+  'footer-minimal': 'footer-minimal',
+
   // Footer
   'footer': 'footer-block',
   'simple-footer': 'footer-simple',

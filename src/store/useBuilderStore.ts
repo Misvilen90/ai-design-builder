@@ -156,6 +156,9 @@ interface BuilderState {
   mediaAssets: Array<{ id: string; type: 'image' | 'video'; name: string; url: string }>;
   addMediaAsset: (asset: { type: 'image' | 'video'; name: string; url: string }) => void;
   deleteMediaAsset: (id: string) => void;
+  saveProject: () => void;
+  setSelectedAll: () => void;
+  reorderPage: (draggedId: string, targetId: string) => void;
 }
 
 const initialPages: Page[] = [
@@ -510,12 +513,13 @@ set((state) => ({
   },
 
   setActivePageId: (id) => {
-  set({
-    activePageId: id,
-    selectedComponentId: null,
-    selectedComponentIds: [],
-  });
-},
+    get().saveToHistory();
+    set({
+      activePageId: id,
+      selectedComponentId: null,
+      selectedComponentIds: [],
+    });
+  },
 
   addComponent: (schema) => {
     get().saveToHistory();
@@ -1055,7 +1059,47 @@ set((state) => ({
   })),
   deleteMediaAsset: (id) => set(state => ({
     mediaAssets: state.mediaAssets.filter(asset => asset.id !== id)
-  }))
+  })),
+
+  saveProject: () => {
+    const { pages, activePageId, projects, activeProjectId } = get();
+    const now = new Date().toISOString();
+
+    // Persist to localStorage
+    localStorage.setItem('genovax_builder_pages', JSON.stringify(pages));
+    localStorage.setItem('genovax_builder_active_page', activePageId);
+
+    // Update project metadata
+    const updatedProjects = projects.map(p =>
+      p.id === activeProjectId ? { ...p, updatedAt: now } : p
+    );
+    localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+    set({ projects: updatedProjects });
+  },
+
+  setSelectedAll: () => {
+    const { pages, activePageId } = get();
+    const activePage = pages.find(p => p.id === activePageId);
+    if (!activePage) return;
+    const allIds = activePage.components.map(c => c.id);
+    set({
+      selectedComponentIds: allIds,
+      selectedComponentId: allIds.length > 0 ? allIds[allIds.length - 1] : null,
+    });
+  },
+
+  reorderPage: (draggedId, targetId) => {
+    get().saveToHistory();
+    set(state => {
+      const pages = [...state.pages];
+      const dragIdx = pages.findIndex(p => p.id === draggedId);
+      const targetIdx = pages.findIndex(p => p.id === targetId);
+      if (dragIdx === -1 || targetIdx === -1) return state;
+      const [dragged] = pages.splice(dragIdx, 1);
+      pages.splice(targetIdx, 0, dragged);
+      return { pages };
+    });
+  },
 };
 });
 

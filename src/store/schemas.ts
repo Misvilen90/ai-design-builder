@@ -103,9 +103,40 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: { html: '<div class="text-[10px] text-slate-500 h-full flex items-center justify-center">Column element</div>' }
   },
 
-  // ==========================================
-  // 2. NAVIGATION
-  // ==========================================
+  'layout-cookie-banner': {
+    type: 'layout-cookie-banner',
+    name: 'Cookie Banner',
+    category: 'Layout',
+    icon: '🍪',
+    defaultPosition: { width: 900, height: 80 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.95)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '10px',
+      padding: '16px 24px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center justify-between h-full w-full gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-lg">🍪</span>
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-white">This site uses cookies</span>
+            <span class="text-[9px] text-slate-500">We use cookies to improve your experience. Accept to continue.</span>
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button class="text-[10px] font-semibold py-1.5 px-4 rounded-lg border border-slate-700 text-slate-400 pointer-events-none">Decline</button>
+          <button class="bg-indigo-600 text-[10px] font-bold py-1.5 px-4 rounded-lg text-white pointer-events-none">Accept All</button>
+        </div>
+      </div>`
+    }
+  },
+
+// ==========================================
+// 2. NAVIGATION
+// ==========================================
   'nav-navbar': {
     type: 'nav-navbar',
     name: 'Navbar',
@@ -122,13 +153,20 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: {
       html: `<div class="flex justify-between items-center h-full w-full pointer-events-none">
-        <div class="font-extrabold text-sm text-indigo-400">⚡ GENOVAX</div>
-        <div class="flex gap-4 text-xs font-semibold text-slate-400">
-          <span>Product</span>
-          <span>Templates</span>
-          <span>Pricing</span>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-[10px] font-black text-white">G</div>
+          <span class="font-extrabold text-sm text-white">GenovaX</span>
         </div>
-        <button class="bg-indigo-650 text-[10px] font-bold px-3 py-1 rounded text-white pointer-events-none">Sign In</button>
+        <div class="flex gap-5 text-xs font-semibold text-slate-400">
+          <span class="text-white">Home</span>
+          <span>Features</span>
+          <span>Pricing</span>
+          <span>Docs</span>
+        </div>
+        <div class="flex gap-2">
+          <button class="text-[10px] font-semibold text-slate-400 px-3 py-1 pointer-events-none">Log In</button>
+          <button class="bg-indigo-600 text-[10px] font-bold px-4 py-1.5 rounded-lg text-white shadow-sm pointer-events-none">Sign Up</button>
+        </div>
       </div>`
     }
   },
@@ -218,9 +256,65 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     }
   },
 
-  // ==========================================
-  // 3. CONTENT
-  // ==========================================
+  'nav-navbar-centered': {
+    type: 'nav-navbar-centered',
+    name: 'Centered Navbar',
+    category: 'Navigation',
+    icon: '🌐',
+    defaultPosition: { width: 900, height: 64 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.9)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '8px',
+      padding: '12px 24px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col items-center justify-center h-full w-full gap-1 pointer-events-none">
+        <div class="font-extrabold text-sm text-indigo-400">⚡ GENOVAX</div>
+        <div class="flex gap-5 text-[9px] font-semibold text-slate-400">
+          <span class="text-white">Home</span>
+          <span>Features</span>
+          <span>Pricing</span>
+          <span>Docs</span>
+          <span>Contact</span>
+        </div>
+      </div>`
+    }
+  },
+  'nav-navbar-transparent': {
+    type: 'nav-navbar-transparent',
+    name: 'Glass Navbar',
+    category: 'Navigation',
+    icon: '🌐',
+    defaultPosition: { width: 900, height: 64 },
+    defaultStyle: {
+      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '12px',
+      padding: '12px 24px',
+      backdropFilter: 'blur(12px)'
+    },
+    defaultContent: {
+      html: `<div class="flex justify-between items-center h-full w-full pointer-events-none">
+        <div class="font-extrabold text-sm text-white">⚡ GENOVAX</div>
+        <div class="flex gap-5 text-xs font-medium text-white/70">
+          <span class="text-white">Home</span>
+          <span>Features</span>
+          <span>Pricing</span>
+          <span>Contact</span>
+        </div>
+        <button class="bg-white/10 backdrop-blur text-[10px] font-bold px-4 py-1.5 rounded-full text-white border border-white/10 pointer-events-none">Get Started</button>
+      </div>`
+    }
+  },
+
+// ==========================================
+// 3. CONTENT
+// ==========================================
   'content-heading': {
     type: 'content-heading',
     name: 'Heading',
@@ -784,9 +878,32 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     }
   },
 
-  // ==========================================
-  // 8. BUSINESS
-  // ==========================================
+  'form-search': {
+    type: 'form-search',
+    name: 'Search Bar',
+    category: 'Forms',
+    icon: '🔍',
+    defaultPosition: { width: 320, height: 42 },
+    defaultStyle: {
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '9999px',
+      padding: '0px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center gap-2 w-full h-full px-4 pointer-events-none">
+        <span class="text-slate-500 text-sm">🔍</span>
+        <input type="text" placeholder="Search components, templates, docs..." class="w-full bg-transparent text-xs text-slate-300 outline-none border-none placeholder:text-slate-600" disabled />
+        <span class="text-[8px] font-mono text-slate-600 bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700">⌘K</span>
+      </div>`
+    }
+  },
+
+// ==========================================
+// 8. BUSINESS
+// ==========================================
   'business-services': {
     type: 'business-services',
     name: 'Services Section',
@@ -928,6 +1045,7 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     icon: '🚀',
     defaultPosition: { width: 900, height: 340 },
     defaultStyle: {
+      backgroundImage: 'radial-gradient(ellipse at top right, rgba(99,102,241,0.12) 0%, transparent 60%)',
       backgroundColor: 'rgba(9, 13, 22, 0.8)',
       borderColor: '#1e293b',
       borderStyle: 'solid',
@@ -938,13 +1056,19 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     defaultContent: {
       html: `<div class="flex flex-col md:flex-row items-center justify-between h-full gap-8">
         <div class="flex-1 flex flex-col gap-3">
-          <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold">GenovaX AI Launch</div>
+          <div class="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold bg-indigo-500/10 border border-indigo-500/20 rounded-full px-3 py-1 w-fit">✦ GenovaX AI Launch</div>
           <h2 class="text-2xl font-extrabold text-white leading-tight">Design Web Interfaces at the Speed of Thought</h2>
           <p class="text-xs text-slate-400 leading-relaxed">Instantiate, drag, lock, snap, and compile design frames with our professional absolute-positioned builder canvas.</p>
-          <button class="bg-indigo-600 w-32 text-[10px] font-bold py-2 rounded text-white mt-2">Get Started Free</button>
+          <div class="flex gap-2 mt-1">
+            <button class="bg-indigo-600 text-[10px] font-bold py-2 px-4 rounded-lg text-white shadow-lg shadow-indigo-500/20">Get Started Free</button>
+            <button class="border border-slate-700 text-[10px] font-bold py-2 px-4 rounded-lg text-slate-400">Learn More</button>
+          </div>
         </div>
         <div class="flex-1 max-w-[340px]">
-          <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=500&q=80" class="rounded-lg shadow-lg border border-slate-800" />
+          <div class="relative">
+            <div class="absolute -inset-1 bg-gradient-to-br from-indigo-500/30 to-purple-500/20 rounded-lg blur-xl"></div>
+            <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=500&q=80" class="relative rounded-lg shadow-lg border border-slate-800" />
+          </div>
         </div>
       </div>`
     }
@@ -1058,9 +1182,68 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     }
   },
 
-  // ==========================================
-  // 10. E-COMMERCE
-  // ==========================================
+  'marketing-hero-centered': {
+    type: 'marketing-hero-centered',
+    name: 'Centered Hero',
+    category: 'Marketing',
+    icon: '🚀',
+    defaultPosition: { width: 900, height: 360 },
+    defaultStyle: {
+      backgroundImage: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(168,85,247,0.05) 100%)',
+      borderColor: '#312e81',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '16px',
+      padding: '48px'
+    },
+    defaultContent: {
+      html: `<div class="flex flex-col items-center justify-center h-full text-center gap-4 max-w-[700px] mx-auto">
+        <div class="text-[9px] uppercase tracking-[0.2em] text-indigo-400 font-extrabold">🚀 GenovaX AI Launch</div>
+        <h2 class="text-3xl font-extrabold text-white leading-tight">Design Web Interfaces at the Speed of Thought</h2>
+        <p class="text-xs text-slate-400 leading-relaxed max-w-[520px]">Instantiate, drag, lock, snap, and compile design frames with our professional absolute-positioned builder canvas. No coding required.</p>
+        <div class="flex gap-3 mt-2">
+          <button class="bg-indigo-600 text-xs font-bold py-2.5 px-6 rounded-lg text-white shadow-lg shadow-indigo-500/25 pointer-events-none">Start Free Trial</button>
+          <button class="border border-slate-700 text-xs font-bold py-2.5 px-6 rounded-lg text-slate-300 pointer-events-none">Watch Demo</button>
+        </div>
+      </div>`
+    }
+  },
+  'marketing-hero-split': {
+    type: 'marketing-hero-split',
+    name: 'Split Hero',
+    category: 'Marketing',
+    icon: '🚀',
+    defaultPosition: { width: 900, height: 360 },
+    defaultStyle: {
+      backgroundColor: 'rgba(9, 13, 22, 0.8)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '16px',
+      padding: '0px',
+      overflow: 'hidden'
+    },
+    defaultContent: {
+      html: `<div class="flex h-full w-full">
+        <div class="flex-1 flex flex-col justify-center gap-3 p-10">
+          <div class="text-[9px] uppercase tracking-widest text-indigo-400 font-extrabold">⚡ GenovaX AI</div>
+          <h2 class="text-2xl font-extrabold text-white leading-tight">Build Beautiful UIs<br/>with Natural Language</h2>
+          <p class="text-xs text-slate-400 leading-relaxed">Just describe what you want and watch the AI generate a complete, editable layout in seconds.</p>
+          <div class="flex gap-2 mt-1">
+            <button class="bg-indigo-600 text-[10px] font-bold py-2 px-4 rounded text-white pointer-events-none">Try It Free</button>
+            <button class="border border-slate-700 text-[10px] font-bold py-2 px-4 rounded text-slate-400 pointer-events-none">Learn More</button>
+          </div>
+        </div>
+        <div class="flex-1 bg-gradient-to-br from-indigo-600/20 to-purple-600/10 flex items-center justify-center">
+          <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" class="w-full h-full object-cover opacity-80" />
+        </div>
+      </div>`
+    }
+  },
+
+// ==========================================
+// 10. E-COMMERCE
+// ==========================================
   'ecommerce-grid': {
     type: 'ecommerce-grid',
     name: 'Product Grid',
@@ -1223,9 +1406,194 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     }
   },
 
-  // ==========================================
-  // 11. FOOTER
-  // ==========================================
+// ==========================================
+// 10b. STATS
+// ==========================================
+'stats-counters': {
+  type: 'stats-counters',
+  name: 'Stats Counters',
+  category: 'Business',
+  icon: '📊',
+  defaultPosition: { width: 900, height: 140 },
+  defaultStyle: {
+    backgroundColor: 'transparent',
+    padding: '0px'
+  },
+  defaultContent: {
+    html: `<div class="grid grid-cols-4 gap-6 h-full w-full">
+      <div class="bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+        <div class="text-2xl font-black text-white">10M+</div>
+        <div class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Active Users</div>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+        <div class="text-2xl font-black text-white">99.9%</div>
+        <div class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Uptime</div>
+      </div>
+      <div class="bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+        <div class="text-2xl font-black text-white">50K+</div>
+        <div class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Projects Built</div>
+      </div>
+      <div class="bg-gradient-to-br from-rose-500/10 to-pink-500/5 border border-rose-500/20 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+        <div class="text-2xl font-black text-white">4.9★</div>
+        <div class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider mt-1">Avg Rating</div>
+      </div>
+    </div>`
+  }
+},
+
+// ==========================================
+// 10c. CONTENT - ADDITIONAL
+// ==========================================
+'content-timeline': {
+  type: 'content-timeline',
+  name: 'Timeline',
+  category: 'Content',
+  icon: '📅',
+  defaultPosition: { width: 600, height: 300 },
+  defaultStyle: {
+    backgroundColor: 'rgba(16, 23, 38, 0.3)',
+    borderColor: '#1e293b',
+    borderStyle: 'solid',
+    borderWidth: '1px',
+    borderRadius: '12px',
+    padding: '24px'
+  },
+  defaultContent: {
+    html: `<div class="flex flex-col gap-0 h-full relative">
+      <h3 class="text-sm font-bold text-white mb-3">Project Timeline</h3>
+      <div class="flex-1 relative pl-6 border-l-2 border-indigo-500/40 space-y-4">
+        <div class="relative">
+          <div class="absolute -left-[25px] top-0.5 w-3 h-3 bg-indigo-500 rounded-full border-2 border-indigo-900"></div>
+          <p class="text-[9px] text-indigo-400 font-bold">Phase 1 — Q1 2026</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Initial research, wireframing, and component architecture design.</p>
+        </div>
+        <div class="relative">
+          <div class="absolute -left-[25px] top-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-emerald-900"></div>
+          <p class="text-[9px] text-emerald-400 font-bold">Phase 2 — Q2 2026</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Core canvas implementation with drag-and-drop and alignment system.</p>
+        </div>
+        <div class="relative">
+          <div class="absolute -left-[25px] top-0.5 w-3 h-3 bg-amber-500 rounded-full border-2 border-amber-900"></div>
+          <p class="text-[9px] text-amber-400 font-bold">Phase 3 — Q3 2026</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">AI integration, export system, and multi-page prototype support.</p>
+        </div>
+      </div>
+    </div>`
+  }
+},
+'content-comparison': {
+  type: 'content-comparison',
+  name: 'Comparison Table',
+  category: 'Content',
+  icon: '⚖️',
+  defaultPosition: { width: 800, height: 260 },
+  defaultStyle: {
+    backgroundColor: 'rgba(16, 23, 38, 0.4)',
+    borderColor: '#1e293b',
+    borderStyle: 'solid',
+    borderWidth: '1px',
+    borderRadius: '12px',
+    padding: '20px'
+  },
+  defaultContent: {
+    html: `<div class="flex flex-col h-full">
+      <h3 class="text-xs font-bold text-white mb-3">Feature Comparison</h3>
+      <table class="w-full text-left text-[10px] border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400 font-semibold">
+            <th class="pb-2 font-medium">Feature</th>
+            <th class="pb-2 text-center">Free</th>
+            <th class="pb-2 text-center">Pro</th>
+            <th class="pb-2 text-center">Enterprise</th>
+          </tr>
+        </thead>
+        <tbody class="text-slate-300">
+          <tr class="border-b border-slate-800/40">
+            <td class="py-2.5 text-slate-400">Components</td>
+            <td class="py-2.5 text-center">46</td>
+            <td class="py-2.5 text-center text-indigo-400 font-bold">Unlimited</td>
+            <td class="py-2.5 text-center text-indigo-400 font-bold">Unlimited</td>
+          </tr>
+          <tr class="border-b border-slate-800/40">
+            <td class="py-2.5 text-slate-400">AI Generations</td>
+            <td class="py-2.5 text-center">10/mo</td>
+            <td class="py-2.5 text-center">500/mo</td>
+            <td class="py-2.5 text-center text-indigo-400 font-bold">Unlimited</td>
+          </tr>
+          <tr>
+            <td class="py-2.5 text-slate-400">Export Formats</td>
+            <td class="py-2.5 text-center">HTML</td>
+            <td class="py-2.5 text-center">HTML + React</td>
+            <td class="py-2.5 text-center text-indigo-400 font-bold">All + API</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`
+  }
+},
+
+// ==========================================
+// 10d. CARDS - ADDITIONAL
+// ==========================================
+'card-pricing-table': {
+  type: 'card-pricing-table',
+  name: 'Pricing Table',
+  category: 'Cards',
+  icon: '💎',
+  defaultPosition: { width: 900, height: 340 },
+  defaultStyle: {
+    backgroundColor: 'transparent',
+    padding: '0px'
+  },
+  defaultContent: {
+    html: `<div class="grid grid-cols-3 gap-4 h-full w-full">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Starter</div>
+          <div class="text-2xl font-black text-white mt-2">Free</div>
+          <p class="text-[9px] text-slate-500 mt-1">Perfect for getting started</p>
+        </div>
+        <ul class="text-[9px] text-slate-400 space-y-1.5 my-4">
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> 46 components</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> 10 AI generations/mo</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> HTML export</li>
+        </ul>
+        <button class="w-full text-[10px] font-bold py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors">Get Started</button>
+      </div>
+      <div class="bg-gradient-to-br from-indigo-600/20 to-purple-600/10 border-2 border-indigo-500 rounded-xl p-5 flex flex-col justify-between relative">
+        <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-indigo-500 text-[8px] font-bold text-white px-3 py-0.5 rounded-full uppercase tracking-wider">Popular</div>
+        <div>
+          <div class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Pro</div>
+          <div class="text-2xl font-black text-white mt-2">$29<span class="text-xs text-slate-500 font-normal">/mo</span></div>
+          <p class="text-[9px] text-slate-500 mt-1">For professionals and teams</p>
+        </div>
+        <ul class="text-[9px] text-slate-400 space-y-1.5 my-4">
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Unlimited components</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> 500 AI generations/mo</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> HTML + React export</li>
+        </ul>
+        <button class="w-full text-[10px] font-bold py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors">Subscribe Now</button>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Enterprise</div>
+          <div class="text-2xl font-black text-white mt-2">Custom</div>
+          <p class="text-[9px] text-slate-500 mt-1">For large organizations</p>
+        </div>
+        <ul class="text-[9px] text-slate-400 space-y-1.5 my-4">
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Everything in Pro</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Unlimited AI</li>
+          <li class="flex items-center gap-1"><span class="text-emerald-400">✓</span> API access + SSO</li>
+        </ul>
+        <button class="w-full text-[10px] font-bold py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors">Contact Sales</button>
+      </div>
+    </div>`
+  }
+},
+
+// ==========================================
+// 11. FOOTER
+// ==========================================
   'footer-simple': {
     type: 'footer-simple',
     name: 'Simple Footer',
@@ -1323,6 +1691,31 @@ export const COMPONENT_SCHEMAS: Record<string, ComponentSchema> = {
     },
     defaultContent: {
       html: '<div class="text-center text-[9px] text-slate-500 font-bold uppercase tracking-wider font-mono">© 2026 GENOVAX. DESIGNED AT THE SPEED OF THOUGHT.</div>'
+    }
+  },
+  'footer-minimal': {
+    type: 'footer-minimal',
+    name: 'Minimal Footer',
+    category: 'Footer',
+    icon: '👣',
+    defaultPosition: { width: 900, height: 48 },
+    defaultStyle: {
+      backgroundColor: 'rgba(16, 23, 38, 0.5)',
+      borderColor: '#1e293b',
+      borderStyle: 'solid',
+      borderWidth: '1px',
+      borderRadius: '6px',
+      padding: '12px 20px'
+    },
+    defaultContent: {
+      html: `<div class="flex items-center justify-between h-full w-full text-[9px] text-slate-500">
+        <span class="font-semibold">© 2026 GenovaX. All rights reserved.</span>
+        <div class="flex gap-4">
+          <span class="hover:text-slate-300 cursor-pointer">Privacy</span>
+          <span class="hover:text-slate-300 cursor-pointer">Terms</span>
+          <span class="hover:text-slate-300 cursor-pointer">Contact</span>
+        </div>
+      </div>`
     }
   }
 };

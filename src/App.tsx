@@ -13,6 +13,7 @@ import { TEMPLATES_LIST } from './store/templatesData';
 import {
   createProject
 } from './services/projectApi';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { flattenEmbeddedControls } from './services/ai/extractEmbeddedControls';
 import{
   Sparkles, 
@@ -80,7 +81,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Keyboard Shortcuts for Undo/Redo (Ctrl+Z / Ctrl+Y)
+  // Global Keyboard Shortcuts
   useEffect(() => {
     if (isPreview) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,14 +94,57 @@ const App: React.FC = () => {
         return;
       }
 
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+      const mod = e.ctrlKey || e.metaKey;
+      const shift = e.shiftKey;
+
+      if (mod && !shift) {
         if (e.key === 'z' || e.key === 'Z') {
           e.preventDefault();
           useBuilderStore.getState().undo();
-        } else if (e.key === 'y' || e.key === 'Y') {
+          return;
+        }
+        if (e.key === 'y' || e.key === 'Y') {
           e.preventDefault();
           useBuilderStore.getState().redo();
+          return;
         }
+        if (e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          useBuilderStore.getState().saveProject();
+          return;
+        }
+        if (e.key === 'd' || e.key === 'D') {
+          e.preventDefault();
+          const store = useBuilderStore.getState();
+          if (store.selectedComponentId) {
+            store.duplicateComponent(store.selectedComponentId);
+          }
+          return;
+        }
+        if (e.key === 'a' || e.key === 'A') {
+          e.preventDefault();
+          useBuilderStore.getState().setSelectedAll();
+          return;
+        }
+      }
+
+      if (e.key === 'Escape') {
+        useBuilderStore.getState().setSelection(null);
+        return;
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        const store = useBuilderStore.getState();
+        const { selectedComponentId, selectedComponentIds } = store;
+        if (selectedComponentId && !selectedComponentIds?.length) {
+          e.preventDefault();
+          store.deleteComponent(selectedComponentId);
+        } else if (selectedComponentIds?.length) {
+          e.preventDefault();
+          for (const id of selectedComponentIds) store.deleteComponent(id);
+          store.setSelectionIds([]);
+        }
+        return;
       }
     };
 
@@ -255,13 +299,19 @@ const App: React.FC = () => {
         {currentView === 'builder' && (
           <>
             {/* Left elements panel */}
-            <LeftPanel />
+            <ErrorBoundary>
+              <LeftPanel />
+            </ErrorBoundary>
 
             {/* Canvas workspace viewport */}
-            <CanvasWorkspace />
+            <ErrorBoundary>
+              <CanvasWorkspace />
+            </ErrorBoundary>
 
             {/* Right properties settings panel */}
-            <RightPanel />
+            <ErrorBoundary>
+              <RightPanel />
+            </ErrorBoundary>
 
             {/* Floating Action Button (FAB) for AI UI layout generator */}
             <button 

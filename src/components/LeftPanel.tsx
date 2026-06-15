@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useBuilderStore } from '../store/useBuilderStore';
 import { COMPONENT_SCHEMAS } from '../store/schemas';
 import { useAIStore } from '../store/useAIStore';
-import { testProviderConnection } from '../services/ai/aiRouter';
+import { testProviderConnection as testAIProviderConnection } from '../services/ai/aiRouter';
 import { 
   Search, 
   ChevronRight, 
@@ -16,8 +16,6 @@ import {
   Copy, 
   Edit3, 
   UploadCloud,
-  Eye,
-  EyeOff,
   Zap,
   CheckCircle2,
   XCircle,
@@ -82,6 +80,7 @@ export const LeftPanel: React.FC = () => {
     deletePage,
     duplicatePage,
     renamePage,
+    reorderPage,
     selectedComponentId,
     updateComponentStyle,
     snapToGrid,
@@ -112,11 +111,12 @@ export const LeftPanel: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
+  // Page drag-reorder state
+  const [dragOverPageId, setDragOverPageId] = useState<string | null>(null);
+  const dragPageId = useRef<string | null>(null);
+
   // AI Configuration — from Zustand store
   const aiStore = useAIStore();
-  const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [showGroqKey, setShowGroqKey] = useState(false);
-  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
 
@@ -753,19 +753,34 @@ export const LeftPanel: React.FC = () => {
                         {pages.map(page => {
                           const isSelectedPage = activePageId === page.id;
                           const isRenamingPage = renamingPageId === page.id;
+                          const isDragOver = dragOverPageId === page.id;
 
                           return (
                             <div
                               key={page.id}
+                              draggable={!isRenamingPage}
                               onClick={() => {
                                 if (!isRenamingPage) {
                                   setActivePageId(page.id);
                                 }
                               }}
+                              onDragStart={() => { dragPageId.current = page.id; }}
+                              onDragOver={e => { e.preventDefault(); setDragOverPageId(page.id); }}
+                              onDragLeave={() => { if (dragOverPageId === page.id) setDragOverPageId(null); }}
+                              onDrop={() => {
+                                const dragged = dragPageId.current;
+                                if (dragged && dragged !== page.id) {
+                                  reorderPage(dragged, page.id);
+                                }
+                                dragPageId.current = null;
+                                setDragOverPageId(null);
+                              }}
                               className={`group w-full flex items-center justify-between px-2 py-0.5 rounded text-[9px] transition-all cursor-pointer border ${
-                                isSelectedPage
-                                  ? 'bg-indigo-500/10 border-indigo-500/35 text-indigo-400 font-semibold'
-                                  : 'border-transparent text-slate-500 hover:bg-slate-850/20 hover:text-slate-300'
+                                isDragOver
+                                  ? 'border-indigo-500 bg-indigo-500/15 text-indigo-300'
+                                  : isSelectedPage
+                                    ? 'bg-indigo-500/10 border-indigo-500/35 text-indigo-400 font-semibold'
+                                    : 'border-transparent text-slate-500 hover:bg-slate-850/20 hover:text-slate-300'
                               }`}
                             >
                               {isRenamingPage ? (
@@ -789,7 +804,10 @@ export const LeftPanel: React.FC = () => {
                                 </div>
                               ) : (
                                 <>
-                                  <span className="truncate">📄 {page.name}</span>
+                                  <span className="truncate flex items-center gap-1">
+                                    <span className="text-slate-600 cursor-grab active:cursor-grabbing">⠿</span>
+                                    📄 {page.name}
+                                  </span>
                                   
                                   {/* Page Actions */}
                                   <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity" onClick={e => e.stopPropagation()}>
@@ -888,6 +906,12 @@ export const LeftPanel: React.FC = () => {
                 AI Configuration
               </span>
 
+              <div className="p-2 rounded border border-slate-800 bg-[#090d16]/30">
+                <p className="text-[8px] text-slate-400 leading-relaxed">
+                  AI providers are configured on the server. Keys are not exposed to the browser.
+                </p>
+              </div>
+
               {/* Provider Selector */}
               <div className="flex flex-col gap-1">
                 <label className="text-slate-500 text-[9px]">AI Provider</label>
@@ -906,109 +930,13 @@ export const LeftPanel: React.FC = () => {
                 </select>
               </div>
 
-              {/* Gemini Key */}
-              <div className="flex flex-col gap-1">
-                <label className="text-slate-500 text-[9px]">Gemini API Key</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type={showGeminiKey ? 'text' : 'password'}
-                    value={aiStore.geminiApiKey}
-                    onChange={e => {
-                      aiStore.setGeminiApiKey(e.target.value);
-                      setTestStatus('idle');
-                    }}
-                    placeholder="AIza..."
-                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
-                  />
-                  <button
-                    onClick={() => setShowGeminiKey(!showGeminiKey)}
-                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
-                  >
-                    {showGeminiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  </button>
-                </div>
-                <select
-                  value={aiStore.geminiModel}
-                  onChange={e => aiStore.setGeminiModel(e.target.value)}
-                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
-                >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (Fast)</option>
-                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (Quality)</option>
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                </select>
-              </div>
-
-              {/* Groq Key */}
-              <div className="flex flex-col gap-1">
-                <label className="text-slate-500 text-[9px]">Groq API Key</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type={showGroqKey ? 'text' : 'password'}
-                    value={aiStore.groqApiKey}
-                    onChange={e => {
-                      aiStore.setGroqApiKey(e.target.value);
-                      setTestStatus('idle');
-                    }}
-                    placeholder="gsk_..."
-                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
-                  />
-                  <button
-                    onClick={() => setShowGroqKey(!showGroqKey)}
-                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
-                  >
-                    {showGroqKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  </button>
-                </div>
-                <select
-                  value={aiStore.groqModel}
-                  onChange={e => aiStore.setGroqModel(e.target.value)}
-                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
-                >
-                  <option value="llama-3.3-70b-versatile">LLaMA 3.3 70B (Fast)</option>
-                  <option value="llama-3.1-8b-instant">LLaMA 3.1 8B (Instant)</option>
-                  <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
-                </select>
-              </div>
-
-              {/* OpenRouter Key */}
-              <div className="flex flex-col gap-1">
-                <label className="text-slate-500 text-[9px]">OpenRouter API Key</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type={showOpenRouterKey ? 'text' : 'password'}
-                    value={aiStore.openRouterApiKey}
-                    onChange={e => {
-                      aiStore.setOpenRouterApiKey(e.target.value);
-                      setTestStatus('idle');
-                    }}
-                    placeholder="sk-or-..."
-                    className="flex-1 p-1.5 rounded border border-slate-800 bg-[#090d16]/60 outline-none text-white text-[9px] font-mono placeholder:text-slate-700 focus:border-indigo-500/50"
-                  />
-                  <button
-                    onClick={() => setShowOpenRouterKey(!showOpenRouterKey)}
-                    className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
-                  >
-                    {showOpenRouterKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  </button>
-                </div>
-                <select
-                  value={aiStore.openRouterModel}
-                  onChange={e => aiStore.setOpenRouterModel(e.target.value)}
-                  className="w-full p-1 rounded border border-slate-800 bg-[#090d16]/40 outline-none text-white text-[8px]"
-                >
-                  <option value="meta-llama/llama-3.3-70b-instruct">LLaMA 3.3 70B</option>
-                  <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (Free)</option>
-                  <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8x7B</option>
-                </select>
-              </div>
-
               {/* Test Connection */}
               <button
                 onClick={async () => {
                   setTestStatus('testing');
                   setTestMessage('');
                   const providerToTest = aiStore.provider === 'auto' ? 'gemini' : aiStore.provider;
-                  const result = await testProviderConnection(providerToTest);
+                  const result = await testAIProviderConnection(providerToTest);
                   setTestStatus(result.success ? 'success' : 'error');
                   setTestMessage(result.message);
                 }}
