@@ -4,7 +4,7 @@ const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMzA0ZTNjZjI2YjEy
 
 const payload = JSON.stringify({
   prompt: 'You are a layout AI. Return ONLY this JSON object, no markdown:\n{"pageName":"Test Page","description":"A test","components":[{"type":"nav-navbar","name":"Navigation","x":50,"y":0,"width":900,"height":64,"zIndex":1,"contentOverrides":{"brand":"TestBrand"}}],"imageKeywords":["test"]}',
-  provider: 'openai'
+  provider: 'gemini'
 });
 
 const req = http.request({
@@ -29,7 +29,7 @@ const req = http.request({
       if (j.error) console.log('ERROR:', j.error.substring(0, 500));
       if (j.plan) console.log('PLAN KEYS:', Object.keys(j.plan));
       if (j.plan && j.plan.components) console.log('COMPONENTS:', j.plan.components.length);
-      if (j.rawResponse) console.log('RAW (first 300):', j.rawResponse.substring(0, 300));
+      console.log('RAW BODY:', body);
     } catch (e) {
       console.log('PARSE ERROR:', e.message);
       console.log('RAW BODY:', body.substring(0, 500));

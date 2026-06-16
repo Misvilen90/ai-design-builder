@@ -16,6 +16,22 @@ const ProjectVersionSchema = new mongoose.Schema(
     canvasData: {
       type: Object,
       default: {}
+    },
+
+    prompt: {
+      type: String,
+      default: ""
+    },
+
+    changeType: {
+      type: String,
+      enum: ["manual", "ai_create", "ai_refine", "ai_prototype"],
+      default: "manual"
+    },
+
+    description: {
+      type: String,
+      default: ""
     }
   },
   {

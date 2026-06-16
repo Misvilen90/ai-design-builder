@@ -44,8 +44,11 @@ export const updateCanvas = (
 export const getCanvas = (projectId: string) =>
   API.get(`/projects/${projectId}/canvas`);
 
-export const createVersion = (projectId: string) =>
-  API.post(`/projects/${projectId}/version`);
+export const createVersion = (
+  projectId: string,
+  details?: { canvasData?: any; prompt?: string; changeType?: string; description?: string }
+) =>
+  API.post(`/projects/${projectId}/version`, details);
 
 export const getVersions = (projectId: string) =>
   API.get(`/projects/${projectId}/version`);

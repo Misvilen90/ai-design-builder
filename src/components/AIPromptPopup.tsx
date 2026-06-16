@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useBuilderStore, Page } from '../store/useBuilderStore';
 import { useAIStore } from '../store/useAIStore';
-import { generateUILayout, generatePrototype, refineLayout, describeCurrentLayout } from '../services/ai/aiRouter';
+import { generateLayoutWithPages, generatePrototype, refineLayout, describeCurrentLayout, type NavPageGenerationResult } from '../services/ai/aiRouter';
 import { analyzePrompt, enrichPrompt, type ClarifyingQuestion } from '../services/ai/promptExpander';
 import { 
   Sparkles, 
@@ -31,7 +31,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
   onClose,
   onShowLoading
 }) => {
-  const { setPages, setActivePageId, activePageId, pages, theme, saveProject } = useBuilderStore();
+  const { setPages, setActivePageId, activePageId, pages, theme, saveProject, createProjectVersionHistory } = useBuilderStore();
   const { provider } = useAIStore();
 
   const [promptValue, setPromptValue] = useState('');
@@ -183,7 +183,8 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
         );
         setPages(updatedPages);
       } else {
-        const result = await generateUILayout(finalPrompt);
+        // Use generateLayoutWithPages — auto-generates sub-pages for each navbar link
+        const result: NavPageGenerationResult = await generateLayoutWithPages(finalPrompt);
 
         if (!result.success) {
           setError(result.error || 'Unknown error occurred.');
@@ -193,25 +194,32 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
           return;
         }
 
-        const generatedComps = result.components;
         setLastProvider(result.provider);
-        setGeneratedCount(generatedComps.length);
+        setGeneratedPages(result.pages.length);
+        setGeneratedLinks(result.linksApplied);
+        setGeneratedCount(result.pages.reduce((s, p) => s + p.components.length, 0));
 
         if (mode === 'replace') {
-          const updatedPages: Page[] = pages.map(page =>
-            page.id === activePageId ? { ...page, components: generatedComps } : page
-          );
-          setPages(updatedPages);
+          // Replace all pages with the newly generated set
+          setPages(result.pages as Page[]);
+          if (result.homePageId) {
+            setActivePageId(result.homePageId);
+          } else if (result.pages.length > 0) {
+            setActivePageId(result.pages[0].id);
+          }
         } else {
+          // 'append' mode: append generated components from home page to the active page,
+          // and add the remaining generated pages as new pages
+          const homeGenPage = result.pages.find(p => p.id === result.homePageId) || result.pages[0];
           const activePage = pages.find(p => p.id === activePageId);
           const existingComps = activePage ? activePage.components : [];
-          
+
           const maxBottom = existingComps.reduce((max, c) => {
             const bottom = c.position.top + c.position.height;
             return bottom > max ? bottom : max;
           }, 0);
-          
-          const offsetComps = generatedComps.map(c => ({
+
+          const offsetComps = homeGenPage.components.map(c => ({
             ...c,
             position: {
               ...c.position,
@@ -220,16 +228,30 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
             }
           }));
 
+          // Merge existing pages with newly generated sub-pages (skip home — append to active)
+          const extraPages = result.pages.filter(p => p.id !== result.homePageId);
           const updatedPages: Page[] = pages.map(page =>
             page.id === activePageId
               ? { ...page, components: [...existingComps, ...offsetComps] }
               : page
           );
-          setPages(updatedPages);
+          setPages([...updatedPages, ...extraPages]);
         }
       }
       
       saveProject();
+
+      // Create a database version history entry
+      const currentPages = useBuilderStore.getState().pages;
+      const typeOfChange = refineMode ? 'ai_refine' : (mode === 'prototype' ? 'ai_prototype' : 'ai_create');
+      const descOfChange = refineMode ? `AI Refinement: ${promptValue}` : (mode === 'prototype' ? `AI Prototype: ${promptValue}` : `AI Layout: ${promptValue}`);
+      
+      createProjectVersionHistory({
+        canvasData: { pages: currentPages },
+        prompt: finalPrompt,
+        changeType: typeOfChange,
+        description: descOfChange
+      }).catch(err => console.error("Failed to auto-create version history:", err));
 
       setRefineMode(false);
       onShowLoading(false);
@@ -425,10 +447,10 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="text-[10px] leading-relaxed">
                 <p className="font-bold text-xs">
-                  {generatedPages > 0 ? 'Prototype Generated Successfully' : 'Layout Generated Successfully'}
+                  {generatedPages > 1 ? 'Multi-Page Site Generated Successfully' : 'Layout Generated Successfully'}
                 </p>
-                {generatedPages > 0 ? (
-                  <p>Generated by <strong>{lastProvider}</strong> — <strong>{generatedPages} pages</strong> with <strong>{generatedLinks} prototype links</strong> ({generatedCount} total components).</p>
+                {generatedPages > 1 ? (
+                  <p>Generated by <strong>{lastProvider}</strong> — <strong>{generatedPages} pages</strong> with <strong>{generatedLinks} nav links</strong> auto-wired ({generatedCount} total components).</p>
                 ) : (
                   <p>Generated by <strong>{lastProvider}</strong> ({generatedCount} components created).</p>
                 )}
@@ -504,7 +526,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
                 }`}
               >
                 <Replace className="w-3 h-3" />
-                Replace Page
+                New Site + Nav Pages
               </button>
               <button
                 onClick={() => { setMode('append'); setShowProtoWarning(false); setShowExpansion(false); }}
@@ -515,7 +537,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
                 }`}
               >
                 <PlusCircle className="w-3 h-3" />
-                Add to Page
+                Add + Nav Pages
               </button>
               <button
                 onClick={() => { setMode('prototype'); setShowProtoWarning(false); setShowExpansion(false); }}
@@ -571,7 +593,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
               ? <><Wand2 className="w-3 h-3 text-emerald-400" /> Modifies existing layout</>
               : isPrototype
                 ? <><Link2 className="w-3 h-3 text-violet-400" /> Multi-page • Auto-linked prototype</>
-                : <><Zap className="w-3 h-3 text-indigo-400" /> Component-based AI • No raw HTML</>
+                : <><Layers className="w-3 h-3 text-indigo-400" /> Generates home + all nav pages auto-linked</>
             }
           </span>
           <button
@@ -588,12 +610,12 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
             {isGenerating ? (
               <>
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                {refineMode ? 'Refining...' : isPrototype ? 'Building Prototype...' : 'Generating...'}
+                {refineMode ? 'Refining...' : isPrototype ? 'Building Prototype...' : 'Generating Site...'}
               </>
             ) : (
               <>
                 {refineMode ? <Wand2 className="w-3.5 h-3.5" /> : isPrototype ? <Layers className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5 fill-white/20" />}
-                {refineMode ? 'Apply Changes' : isPrototype ? 'Generate Prototype' : 'Generate Layout'}
+                {refineMode ? 'Apply Changes' : isPrototype ? 'Generate Prototype' : 'Generate Site + Pages'}
               </>
             )}
           </button>

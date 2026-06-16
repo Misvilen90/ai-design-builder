@@ -187,6 +187,22 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
       try {
         const parsed = JSON.parse(savedPages);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Check if localStorage has only legacy default template components
+          const hasOnlyDefaultComponents = parsed.every(p => 
+            p.components.every((c: any) => ['hero-1', 'heading-1', 'paragraph-1', 'btn-cta'].includes(c.id))
+          );
+          
+          if (hasOnlyDefaultComponents && parsed.some(p => p.components.length > 0)) {
+            localStorage.removeItem('genovax_builder_pages');
+            localStorage.removeItem('genovax_builder_active_page');
+            // Force clean initial pages
+            useBuilderStore.setState({
+              pages: [{ id: 'home', name: 'Home Page', components: [] }],
+              activePageId: 'home'
+            });
+            return;
+          }
+
           useBuilderStore.setState({ pages: parsed });
           if (savedActivePage) {
             useBuilderStore.setState({ activePageId: savedActivePage });

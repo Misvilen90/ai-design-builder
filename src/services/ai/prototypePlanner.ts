@@ -240,27 +240,38 @@ For this ${siteType} site, generate these pages: ${pagesGuide}
 Suggested inter-page links to implement:
 ${linksGuide}
 
+## Professional UI/UX Design & Aesthetics Rules (CRITICAL)
+Your designs must look like they were designed by a premium, professional web designer. Follow these rules:
+1. **Sleek Modern Spacing**: Do not crowd elements. Use consistent paddings (32px to 48px) inside component styleOverrides.
+2. **Glassmorphism & Fine Accents**: Use translucent dark component cards with thin, semi-transparent borders. For example, use styleOverrides like:
+   '{ "backgroundColor": "rgba(16, 23, 38, 0.6)", "borderColor": "rgba(99, 102, 241, 0.12)", "borderWidth": "1px", "borderStyle": "solid", "borderRadius": "16px", "padding": "40px" }'.
+3. **Color Harmony & Styling**: Use the selected theme colors consistently. Map primaryColor to buttons background and text highlights, accentColor to badges/icons, and backgroundColor/textColor to cards and typography.
+4. **Contrast & Typographic Hierarchy**: Headings must be bold and clean. Body descriptions should be smaller, low-contrast, and readable. Use uppercase subheadings with wide letter spacing for badges.
+5. **Modern Media Keywords**: Choose descriptive, high-quality Unsplash image keywords to match the theme (e.g. "modern tech dashboard interface screenshot", "minimalist creative office workspace", "abstract glowing fluid gradient design").
+
 ## Layout Rules Per Page
-1. Start every page with a navbar (y=0, full width 900px, x=50)
-2. End every page with a footer
-3. Leave 20-30px vertical gaps between sections
-4. Full-width sections: width=900, x=50. Center them horizontally. Do not make x off-center.
-5. Generate 6-10 components per page
-6. Spread content across 800-1300px of vertical space per page
-7. For grids, use ONE grid component rather than individual cards
+1. Start every page with a navbar (y=0, full width 900px, x=50). The navbar on every page MUST display exactly the same navigation links representing the pages in this prototype.
+2. The prototype pages generated MUST match exactly 1:1 with the links in the Home page's navbar (e.g. if the navbar lists Home, Features, Pricing, and Contact, then the prototype must consist of exactly those 4 pages with pageIds matching those slugs: 'home', 'features', 'pricing', 'contact'). Do not generate extraneous pages.
+3. The Home Page itself must act as a comprehensive single-page overview containing all key layout sections (such as Hero, Features/Products grid, Testimonials, CTA, and Footer) styled professionally.
+4. End every page with a footer.
+5. Leave 20-30px vertical gaps between sections.
+6. Full-width sections: width=900, x=50. Center them horizontally. Do not make x off-center.
+7. Generate 6-10 components per page.
+8. Spread content across 800-1300px of vertical space per page.
+9. For grids, use ONE grid component rather than individual cards.
 
 ## Content Intelligence
-- Generate unique, contextually relevant content for EACH page
-- Navbar brand name should be consistent across all pages
-- Home page hero should be bold and action-oriented
-- Links (in the "links" array) must use the EXACT component "name" as written in that page's components
-- toPageId values must match a pageId declared in the pages array
+- Generate unique, contextually relevant content for EACH page.
+- Navbar brand name and link options must be identical across all pages.
+- Home page hero should be bold and action-oriented.
+- Links (in the "links" array) must use the EXACT component "name" as written in that page's components.
+- toPageId values must match a pageId declared in the pages array.
 
 ## Linking Rules
-- The navbar on every page should have its main CTA button linked to the most relevant page
-- Hero CTA buttons should link to the next logical page in the user journey
-- "Contact Us" / "Get in Touch" buttons should link to the contact page
-- Every page's navbar links should connect to other major pages
+- Every navigation link, menu item, and CTA button in the navbar/footer must link directly to the corresponding pageId in the prototype.
+- To link an individual navbar item or sub-element (such as a text link like "Features", "Pricing", or "Docs"), you MUST add an entry in the page's "links" array where "componentName" is the exact text label of that link (e.g., "Features", "Pricing", "Docs", "Log In", "Sign Up") and "toPageId" is the target page's pageId.
+- Hero CTA buttons should link to the next logical page in the user journey (e.g. "Pricing" or "Features").
+- "Contact Us" / "Get in Touch" buttons should link to the contact page.
 
 ## DYNAMIC VARIATION RULES
 1. DO NOT return identical layout plans for similar prompts. Introduce variations in component type selections, copy, ordering, and themes.
@@ -270,7 +281,7 @@ ${linksGuide}
 - Return ONLY the JSON object — no markdown, no code fences, no explanation
 - The JSON must be parseable by JSON.parse()
 - Every component MUST have: type, name, x, y, width, height, zIndex
-- Maximum 6 pages total
+- Generate EXACTLY 4 pages total. The pages must match the main navigation links.
 - The "links" array in each page can be empty [] if no outgoing links from that page
 - isHome must be true for exactly ONE page (the main landing page)`;
 }

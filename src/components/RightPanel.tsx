@@ -256,71 +256,111 @@ export const RightPanel: React.FC = () => {
     const html = comp.content.html;
     if (!html || typeof html !== 'string') return null;
 
-    // Matches headings, paragraphs, spans, buttons, list items, and image sources
-    const regex = /(<button[^>]*>[\s\S]*?<\/button>|<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>|<p[^>]*>[\s\S]*?<\/p>|<span[^>]*>[\s\S]*?<\/span>|<li[^>]*>[\s\S]*?<\/li>|src="https:\/\/images\.unsplash\.com\/[^"]+"|src="https:\/\/images\.unsplash\.com\/[^"]+)/gi;
-    const matches = [...html.matchAll(regex)];
+    // Parse the HTML using browser's DOMParser
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Query all potential editable tags
+    const allElements = Array.from(doc.body.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img'));
+    
+    // Filter to only leaves (no other editable children inside) to prevent nested text duplication
+    const leafElements = allElements.filter(el => {
+      if (el.tagName === 'IMG') return true;
+      const children = el.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img');
+      return children.length === 0;
+    });
 
-    if (matches.length === 0) return null;
-
-    // Filter duplicates to keep UI clean
-    const seenTags = new Set<string>();
-    const uniqueMatches: typeof matches = [];
-    for (const match of matches) {
-      if (!seenTags.has(match[0])) {
-        seenTags.add(match[0]);
-        uniqueMatches.push(match);
-      }
-    }
+    if (leafElements.length === 0) return null;
 
     return (
-      <div className="space-y-1.5 mt-2 border-t border-slate-800/40 pt-2">
+      <div className="space-y-2 mt-2 border-t border-slate-800/40 pt-2">
         <span className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Editable Elements</span>
-        {uniqueMatches.map((match, idx) => {
-          const fullTag = match[0];
-          let label = '';
-          let value = '';
-          let isImage = false;
-
-          if (fullTag.startsWith('src=')) {
-            isImage = true;
-            label = `Image Link #${idx + 1}`;
-            const srcVal = fullTag.match(/src="([^"]+)"/);
-            value = srcVal ? srcVal[1] : '';
-          } else {
-            const tagName = fullTag.match(/^<([a-z0-9]+)/i)?.[1]?.toLowerCase() || 'tag';
-            label = `${tagName.toUpperCase()} Text #${idx + 1}`;
-            value = fullTag.replace(/<[^>]+>/g, '').trim();
-          }
-
-          if (!value && !isImage) return null;
+        {leafElements.map((el, idx) => {
+          const tagName = el.tagName.toLowerCase();
+          const isImage = tagName === 'img';
+          const label = isImage ? `Image #${idx + 1}` : `${tagName.toUpperCase()} Text #${idx + 1}`;
+          const value = isImage ? (el.getAttribute('src') || '') : (el.textContent || '').trim();
+          const linkDest = el.getAttribute('data-page-link') || '';
 
           return (
-            <div key={idx} className="flex flex-col gap-0.5">
-              <label className="text-slate-500 text-[8px]" htmlFor={`emb-${comp.id}-${idx}`}>{label}</label>
+            <div key={idx} className="p-1 rounded bg-black/10 border border-slate-800/30 space-y-1">
+              <div className="flex justify-between items-center text-[8px] text-slate-500 font-semibold">
+                <span>{label}</span>
+                {!isImage && (
+                  <span className="text-slate-600 italic">"{value.slice(0, 15)}{value.length > 15 ? '...' : ''}"</span>
+                )}
+              </div>
+              
               <textarea
-                id={`emb-${comp.id}-${idx}`}
                 value={value}
                 disabled={isLocked}
                 onChange={e => {
                   const newValue = e.target.value;
-                  let newHtml = comp.content.html;
-                  if (isImage) {
-                    newHtml = newHtml.replace(fullTag, `src="${newValue}"`);
-                  } else {
-                    const startTagMatch = fullTag.match(/^<[a-z0-9]+[^>]*>/i);
-                    const endTagMatch = fullTag.match(/<\/[a-z0-9]+>$/i);
-                    if (startTagMatch && endTagMatch) {
-                      const newTag = `${startTagMatch[0]}${newValue}${endTagMatch[0]}`;
-                      newHtml = newHtml.replace(fullTag, newTag);
+                  const currentHtml = comp.content.html;
+                  const loopParser = new DOMParser();
+                  const loopDoc = loopParser.parseFromString(currentHtml, 'text/html');
+                  const loopAll = Array.from(loopDoc.body.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img'));
+                  const loopLeaves = loopAll.filter(item => {
+                    if (item.tagName === 'IMG') return true;
+                    return item.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img').length === 0;
+                  });
+                  const targetEl = loopLeaves[idx];
+                  if (targetEl) {
+                    if (isImage) {
+                      targetEl.setAttribute('src', newValue);
+                    } else {
+                      targetEl.textContent = newValue;
                     }
+                    updateComponentContent(comp.id, { html: loopDoc.body.innerHTML });
                   }
-                  updateComponentContent(comp.id, { html: newHtml });
                 }}
                 rows={value.length > 30 ? 2 : 1}
                 className={`w-full text-[9px] p-1 rounded border outline-none bg-black/25 resize-none ${
                   theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
                 }`}
+                placeholder={isImage ? "Image source URL" : "Enter text content..."}
               />
+
+              {/* Link settings for individual navbar link elements */}
+              {!isImage && (tagName === 'span' || tagName === 'a' || tagName === 'button') && (
+                <div className="flex items-center justify-between gap-1 text-[8px]">
+                  <span className="text-slate-500 font-medium">Link Destination:</span>
+                  <select
+                    value={linkDest}
+                    disabled={isLocked}
+                    onChange={e => {
+                      const val = e.target.value;
+                      const currentHtml = comp.content.html;
+                      const loopParser = new DOMParser();
+                      const loopDoc = loopParser.parseFromString(currentHtml, 'text/html');
+                      const loopAll = Array.from(loopDoc.body.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img'));
+                      const loopLeaves = loopAll.filter(item => {
+                        if (item.tagName === 'IMG') return true;
+                        return item.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, button, a, li, img').length === 0;
+                      });
+                      const targetEl = loopLeaves[idx];
+                      if (targetEl) {
+                        if (val) {
+                          targetEl.setAttribute('data-page-link', val);
+                          targetEl.style.cursor = 'pointer';
+                        } else {
+                          targetEl.removeAttribute('data-page-link');
+                          targetEl.style.cursor = '';
+                        }
+                        updateComponentContent(comp.id, { html: loopDoc.body.innerHTML });
+                      }
+                    }}
+                    className={`text-[8px] p-0.5 rounded border outline-none bg-black/35 ${
+                      theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <option value="">No link</option>
+                    {pages.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           );
         })}
@@ -379,6 +419,26 @@ export const RightPanel: React.FC = () => {
             />
           </div>
         )}
+
+        <div className="flex flex-col gap-0.5 mt-2 border-t border-slate-800/40 pt-2">
+          <label className="text-slate-500 font-bold uppercase tracking-wider text-[8px]">Component Page Link</label>
+          <select
+            value={comp.prototypeDestination || ''}
+            disabled={isLocked}
+            onChange={e => {
+              const val = e.target.value;
+              useBuilderStore.getState().setPrototypeDestination(comp.id, val || null);
+            }}
+            className={`w-full text-[9px] p-0.5 rounded border outline-none bg-black/35 ${
+              theme === 'dark' ? 'border-slate-800 text-white' : 'border-slate-200 text-slate-800'
+            }`}
+          >
+            <option value="">No link (Static Component)</option>
+            {pages.map(p => (
+              <option key={p.id} value={p.id}>📄 {p.name}</option>
+            ))}
+          </select>
+        </div>
 
         {renderHtmlTextFields(comp, isLocked)}
 

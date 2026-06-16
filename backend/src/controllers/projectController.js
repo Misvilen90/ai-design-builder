@@ -181,8 +181,11 @@ const createProjectVersion = async (req, res) => {
 
     const newVersion = await createVersion(
       project._id,
-      project.canvasData,
-      version + 1
+      req.body.canvasData || project.canvasData,
+      version + 1,
+      req.body.prompt || "",
+      req.body.changeType || "manual",
+      req.body.description || ""
     );
 
     res.status(201).json(newVersion);

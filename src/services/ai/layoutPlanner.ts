@@ -281,6 +281,15 @@ ${themeInstructions}
 ${Object.entries(WEBSITE_TEMPLATES).map(([type, t]) => `- **${type}**: ${t.pattern}
   Components to use (in order): ${t.components.join(' → ')}`).join('\n')}
 
+## Professional UI/UX Design & Aesthetics Rules (CRITICAL)
+Your designs must look like they were designed by a premium, professional web designer. Follow these rules:
+1. **Sleek Modern Spacing**: Do not crowd elements. Use consistent paddings (32px to 48px) inside component styleOverrides.
+2. **Glassmorphism & Fine Accents**: Use translucent dark component cards with thin, semi-transparent borders. For example, use styleOverrides like:
+   '{ "backgroundColor": "rgba(16, 23, 38, 0.6)", "borderColor": "rgba(99, 102, 241, 0.12)", "borderWidth": "1px", "borderStyle": "solid", "borderRadius": "16px", "padding": "40px" }'.
+3. **Color Harmony & Styling**: Use the selected theme colors consistently. Map primaryColor to buttons background and text highlights, accentColor to badges/icons, and backgroundColor/textColor to cards and typography.
+4. **Contrast & Typographic Hierarchy**: Headings must be bold and clean. Body descriptions should be smaller, low-contrast, and readable. Use uppercase subheadings with wide letter spacing for badges.
+5. **Modern Media Keywords**: Choose descriptive, high-quality Unsplash image keywords to match the theme (e.g. "modern tech dashboard interface screenshot", "minimalist creative office workspace", "abstract glowing fluid gradient design").
+
 ## Layout Rules
 1. Always start with "nav-navbar" at y=0
 2. Next component starts at y = (previous y + previous height + 20)

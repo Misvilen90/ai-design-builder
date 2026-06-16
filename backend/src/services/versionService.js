@@ -4,12 +4,18 @@ require("../models/ProjectVersion");
 const createVersion = async (
   projectId,
   canvasData,
-  versionNumber
+  versionNumber,
+  prompt = "",
+  changeType = "manual",
+  description = ""
 ) => {
   return await ProjectVersion.create({
     projectId,
     canvasData,
-    versionNumber
+    versionNumber,
+    prompt,
+    changeType,
+    description
   });
 };
 

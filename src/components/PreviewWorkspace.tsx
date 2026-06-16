@@ -216,6 +216,18 @@ export const PreviewWorkspace: React.FC = () => {
         >
           {/* Inject dynamic stylesheet mapped to global theme parameters */}
           <style dangerouslySetInnerHTML={{ __html: getThemeStylesheet(globalTheme) }} />
+          <style dangerouslySetInnerHTML={{ __html: `
+            /* Ensure child pointer events are active in preview so sub-elements (links, buttons) are clickable */
+            .preview-component-wrapper * {
+              pointer-events: auto !important;
+            }
+            [data-page-link] {
+              cursor: pointer !important;
+            }
+            [data-page-link]:hover {
+              opacity: 0.8;
+            }
+          ` }} />
           {components.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[600px] text-center p-8">
               <div className="text-4xl mb-3">📭</div>
@@ -233,6 +245,17 @@ export const PreviewWorkspace: React.FC = () => {
                   key={comp.id}
                   id={`comp-preview-${comp.id}`}
                   onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    const linkEl = target.closest('[data-page-link]');
+                    if (linkEl) {
+                      const dest = linkEl.getAttribute('data-page-link');
+                      if (dest) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setActivePageId(dest);
+                        return;
+                      }
+                    }
                     if (comp.prototypeDestination) {
                       e.preventDefault();
                       e.stopPropagation();
@@ -249,10 +272,10 @@ export const PreviewWorkspace: React.FC = () => {
                     zIndex: comp.position.zIndex,
                     cursor: comp.prototypeDestination ? 'pointer' : undefined
                   }}
-                  className={`transition-all ${comp.prototypeDestination ? 'hover:scale-[1.015] hover:shadow-lg active:scale-[0.995]' : ''}`}
+                  className={`transition-all preview-component-wrapper ${comp.prototypeDestination ? 'hover:scale-[1.015] hover:shadow-lg active:scale-[0.995]' : ''}`}
                 >
                   <div 
-                    className={`w-full h-full overflow-hidden relative select-text ${comp.prototypeDestination ? 'pointer-events-none' : ''}`}
+                    className="w-full h-full overflow-hidden relative select-text"
                     style={{
                       ...comp.style,
                       backgroundColor: comp.style.backgroundColor || 'transparent'

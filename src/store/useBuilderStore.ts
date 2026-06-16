@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { TEMPLATES_LIST } from './templatesData';
-import { getProjects, updateCanvas, getCanvas, renameProject as renameProjectApi, createProject as createProjectApi, deleteProject as deleteProjectApi } from '../services/projectApi';
+import { getProjects, updateCanvas, getCanvas, renameProject as renameProjectApi, createProject as createProjectApi, deleteProject as deleteProjectApi, createVersion as createVersionApi, getVersions as getVersionsApi, restoreVersion as restoreVersionApi } from '../services/projectApi';
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -77,6 +77,13 @@ interface BuilderState {
   history: HistorySnapshot[];
   redoHistory: HistorySnapshot[];
   
+  // Versions / History Management
+  projectVersions: any[];
+  isVersionsLoading: boolean;
+  loadProjectVersions: () => Promise<void>;
+  createProjectVersionHistory: (details: { canvasData?: any; prompt?: string; changeType: string; description: string }) => Promise<void>;
+  restoreProjectVersion: (versionId: string) => Promise<void>;
+
   // Projects Management
   projects: SavedProject[];
   activeProjectId: string | null;
@@ -165,125 +172,12 @@ const initialPages: Page[] = [
   {
     id: 'home',
     name: 'Home Page',
-    components: [
-      {
-        id: 'hero-1',
-        type: 'hero-section',
-        name: 'Hero Section',
-        category: 'marketing',
-        icon: '⚡',
-        content: {
-          title: 'Design at the Speed of Thought',
-          subtitle: 'Create responsive, professional websites with GenovaX. Edit inline, drag elements, and publish instantly.',
-          btnText: 'Start Building'
-        },
-        style: {
-          backgroundColor: 'rgba(99, 102, 241, 0.08)',
-          color: '#ffffff',
-          borderColor: '#1e293b',
-          borderRadius: '16px',
-          padding: '24px',
-          borderStyle: 'solid',
-          borderWidth: '1px'
-        },
-        position: {
-          left: 50,
-          top: 60,
-          width: 900,
-          height: 380,
-          rotate: 0,
-          zIndex: 1
-        }
-      },
-      {
-        id: 'heading-1',
-        type: 'heading',
-        name: 'Main Heading',
-        category: 'content',
-        icon: '🔤',
-        content: { text: '⚡ AI-Powered Canvas Editor' },
-        style: {
-          fontFamily: "'Outfit', sans-serif",
-          fontSize: '32px',
-          fontWeight: '800',
-          color: '#818cf8',
-          textAlign: 'center'
-        },
-        position: {
-          left: 200,
-          top: 480,
-          width: 600,
-          height: 50,
-          rotate: 0,
-          zIndex: 2
-        }
-      },
-      {
-        id: 'paragraph-1',
-        type: 'paragraph',
-        name: 'Subtext Paragraph',
-        category: 'content',
-        icon: '📝',
-        content: { text: 'GenovaX enables pixel-perfect alignment guides, snap-to-grid accuracy, responsive canvas ratios, and Figma-style nested absolute positioning.' },
-        style: {
-          fontFamily: "'Inter', sans-serif",
-          fontSize: '14px',
-          fontWeight: '400',
-          color: '#94a3b8',
-          textAlign: 'center'
-        },
-        position: {
-          left: 250,
-          top: 540,
-          width: 500,
-          height: 70,
-          rotate: 0,
-          zIndex: 3
-        }
-      },
-      {
-        id: 'btn-cta',
-        type: 'primary-button',
-        name: 'CTA Button',
-        category: 'buttons',
-        icon: '🔘',
-        content: { label: 'Explore Features 🚀' },
-        style: {
-          backgroundColor: '#6366f1',
-          color: '#ffffff',
-          borderRadius: '8px',
-          fontSize: '13px',
-          fontWeight: '600',
-          padding: '10px 20px',
-          textAlign: 'center'
-        },
-        position: {
-          left: 410,
-          top: 630,
-          width: 180,
-          height: 42,
-          rotate: 0,
-          zIndex: 4
-        }
-      }
-    ]
+    components: []
   }
 ];
 
 export const useBuilderStore = create<BuilderState>((set, get) => {
-  const defaultProjects: SavedProject[] = TEMPLATES_LIST.map((t, idx) => ({
-    id: t.id,
-    name: t.name,
-    createdAt: new Date(Date.now() - (4 - idx) * 24 * 3600 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - (4 - idx) * 12 * 3600 * 1000).toISOString(),
-    pages: [
-      {
-        id: 'home',
-        name: 'Home Page',
-        components: t.components
-      }
-    ]
-  }));
+  const defaultProjects: SavedProject[] = [];
 
   const getInitialProjects = (): SavedProject[] => {
     const local = localStorage.getItem('genovax_projects_list');
@@ -354,6 +248,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     snapToGrid: true,
     projects: initialProjs,
     activeProjectId: initialProjs[0]?.id || null,
+    projectVersions: [],
+    isVersionsLoading: false,
     setProjects: (projects) => {
       set({ projects });
     },
@@ -361,15 +257,82 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
     setActiveProjectId: (id) => {
       set({ activeProjectId: id });
     },
+
+    loadProjectVersions: async () => {
+      const activeId = get().activeProjectId;
+      if (!activeId || activeId.startsWith('project-')) {
+        set({ projectVersions: [] });
+        return;
+      }
+      set({ isVersionsLoading: true });
+      try {
+        const response = await getVersionsApi(activeId);
+        set({ projectVersions: response.data || [] });
+      } catch (error) {
+        console.error('Failed to load project versions:', error);
+      } finally {
+        set({ isVersionsLoading: false });
+      }
+    },
+
+    createProjectVersionHistory: async (details) => {
+      const activeId = get().activeProjectId;
+      if (!activeId || activeId.startsWith('project-')) return;
+      try {
+        const canvasData = details.canvasData || { pages: get().pages };
+        await createVersionApi(activeId, {
+          canvasData,
+          prompt: details.prompt || "",
+          changeType: details.changeType,
+          description: details.description
+        });
+        await get().loadProjectVersions();
+      } catch (error) {
+        console.error('Failed to create project version:', error);
+      }
+    },
+
+    restoreProjectVersion: async (versionId) => {
+      const activeId = get().activeProjectId;
+      if (!activeId || activeId.startsWith('project-')) return;
+      try {
+        const response = await restoreVersionApi(activeId, versionId);
+        const project = response.data?.project;
+        if (project && project.canvasData?.pages) {
+          set({
+            pages: project.canvasData.pages,
+            activePageId: project.canvasData.pages[0]?.id || 'home',
+            selectedComponentId: null,
+            selectedComponentIds: [],
+            history: [],
+            redoHistory: []
+          });
+          localStorage.setItem('genovax_builder_pages', JSON.stringify(project.canvasData.pages));
+          localStorage.setItem('genovax_builder_active_page', project.canvasData.pages[0]?.id || 'home');
+          
+          const updatedProjects = get().projects.map(p => 
+            p.id === activeId ? { ...p, pages: project.canvasData.pages, updatedAt: new Date().toISOString() } : p
+          );
+          set({ projects: updatedProjects });
+          localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
+          alert('Version restored successfully!');
+        }
+      } catch (error) {
+        console.error('Failed to restore project version:', error);
+        alert('Failed to restore version');
+      }
+    },
     loadProjects: async () => {
       try {
         const response = await getProjects();
     
         const mongoProjects = response.data;
         const localProjects = get().projects;
+        const token = useAuthStore.getState().token;
     
         const projects = mongoProjects.map((project: any) => {
-          const matchedLocal = localProjects.find(p => p.id === project._id);
+          // If logged in, do NOT merge with local cache projects to guarantee user isolation
+          const matchedLocal = !token ? localProjects.find(p => p.id === project._id) : null;
           return {
             id: project._id,
             name: project.projectName,
@@ -377,7 +340,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
             updatedAt: project.updatedAt,
             pages: matchedLocal && matchedLocal.pages && matchedLocal.pages.length > 0
               ? matchedLocal.pages
-              : (project.canvasData?.pages || [])
+              : (project.canvasData?.pages || [{ id: 'home', name: 'Home Page', components: [] }])
           };
         });
     
@@ -409,6 +372,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => {
 
         localStorage.setItem('genovax_projects_list', JSON.stringify(projects));
         console.log('Mapped and merged projects:', projects);
+        if (newActiveId) {
+          await get().loadProjectVersions();
+        }
       } catch (error) {
         console.error('Failed to load projects:', error);
       }
@@ -918,20 +884,25 @@ set((state) => ({
       const err = error as any;
       console.log('Offline/Network error loading canvas from MongoDB (using local cache):', err.message || err);
     }
+    await get().loadProjectVersions();
   },
 
   saveCurrentProject: async(name) => {
     const { pages, activeProjectId, projects } = get();
     const now = new Date().toISOString();
+    const token = useAuthStore.getState().token;
+    const isLocalId = !activeProjectId || activeProjectId.startsWith('project-');
     
-    if (activeProjectId) {
-      try {
-        await updateCanvas(activeProjectId, {
-          pages
-        });
-        console.log('Canvas saved to MongoDB');
-      } catch (error) {
-        console.error('MongoDB canvas save failed:', error);
+    if (!isLocalId) {
+      if (token) {
+        try {
+          await updateCanvas(activeProjectId, {
+            pages
+          });
+          console.log('Canvas saved to MongoDB');
+        } catch (error) {
+          console.error('MongoDB canvas save failed:', error);
+        }
       }
     
       const updatedProjects = projects.map(p => {
@@ -950,13 +921,15 @@ set((state) => ({
       const projName = name || 'Untitled Project';
       let newId = `project-${Date.now()}`;
       
-      try {
-        const response = await createProjectApi(projName);
-        if (response.data?._id) {
-          newId = response.data._id;
+      if (token) {
+        try {
+          const response = await createProjectApi(projName);
+          if (response.data?._id) {
+            newId = response.data._id;
+          }
+        } catch (e) {
+          console.error("Failed to create project on backend:", e);
         }
-      } catch (e) {
-        console.error("Failed to create project on backend:", e);
       }
 
       const newProject: SavedProject = {
@@ -967,10 +940,12 @@ set((state) => ({
         updatedAt: now
       };
 
-      try {
-        await updateCanvas(newId, { pages: newProject.pages });
-      } catch (e) {
-        console.error("Failed to initialize canvas on backend:", e);
+      if (token && !newId.startsWith('project-')) {
+        try {
+          await updateCanvas(newId, { pages: newProject.pages });
+        } catch (e) {
+          console.error("Failed to initialize canvas on backend:", e);
+        }
       }
 
       const updatedProjects = [...projects, newProject];

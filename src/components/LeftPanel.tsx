@@ -19,7 +19,8 @@ import {
   Zap,
   CheckCircle2,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  History
 } from 'lucide-react';
 
 // Color picker row helper
@@ -95,7 +96,12 @@ export const LeftPanel: React.FC = () => {
     loadProject,
     deleteProject,
     createNewProject,
-    renameProject
+    renameProject,
+    projectVersions,
+    isVersionsLoading,
+    loadProjectVersions,
+    createProjectVersionHistory,
+    restoreProjectVersion
   } = useBuilderStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -361,6 +367,17 @@ export const LeftPanel: React.FC = () => {
             <FileText className="w-4 h-4" />
           </button>
           <button
+            onClick={() => handleTabToggle('history')}
+            className={`p-2 rounded-lg transition-all ${
+              leftPanelTab === 'history' && leftPanelExpanded
+                ? 'bg-indigo-600 text-white shadow shadow-indigo-600/35'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850/40'
+            }`}
+            title="Version History"
+          >
+            <History className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => handleTabToggle('settings')}
             className={`p-2 rounded-lg transition-all ${
               leftPanelTab === 'settings' && leftPanelExpanded
@@ -391,6 +408,7 @@ export const LeftPanel: React.FC = () => {
             {leftPanelTab === 'media' && 'Media Library'}
             {leftPanelTab === 'theme' && 'Themes'}
             {leftPanelTab === 'pages' && 'Pages'}
+            {leftPanelTab === 'history' && 'Version History'}
             {leftPanelTab === 'settings' && 'Settings'}
           </span>
           <button 
@@ -872,6 +890,123 @@ export const LeftPanel: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: VERSION HISTORY */}
+        {leftPanelTab === 'history' && (
+          <div className="flex-1 flex flex-col overflow-hidden text-[9px] text-slate-300">
+            {/* Create Snapshot block */}
+            <div className="p-3 border-b border-slate-850 flex flex-col gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  const activeId = activeProjectId;
+                  if (!activeId || activeId.startsWith('project-')) {
+                    alert('Please save this project to the cloud first before creating snapshots.');
+                    return;
+                  }
+                  const desc = prompt('Enter a description for this manual snapshot:');
+                  if (desc !== null) {
+                    createProjectVersionHistory({
+                      changeType: 'manual',
+                      description: desc.trim() || 'Manual Snapshot'
+                    });
+                  }
+                }}
+                disabled={!activeProjectId || activeProjectId.startsWith('project-')}
+                className="w-full py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold transition-all shadow flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Create Snapshot
+              </button>
+            </div>
+
+            {/* Version list container */}
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-3 pb-24">
+              {!activeProjectId || activeProjectId.startsWith('project-') ? (
+                <div className="text-center py-6 px-3 border border-dashed border-slate-800 rounded bg-slate-900/10 text-slate-500 leading-normal">
+                  💡 Version History is available for cloud-saved projects. Click <strong>Save Project</strong> or create a new database project to track changes.
+                </div>
+              ) : isVersionsLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                  <span className="text-[8px] text-slate-500">Loading history...</span>
+                </div>
+              ) : projectVersions.length === 0 ? (
+                <div className="text-center py-6 px-3 border border-dashed border-slate-800 rounded bg-slate-900/10 text-slate-500 leading-normal">
+                  No saved snapshots found for this project yet. Use AI generators or click "Create Snapshot" above.
+                </div>
+              ) : (
+                [...projectVersions].sort((a: any, b: any) => b.versionNumber - a.versionNumber).map((version: any) => {
+                  const isAI = version.changeType && version.changeType !== 'manual';
+                  
+                  return (
+                    <div 
+                      key={version._id} 
+                      className="p-2.5 rounded border border-slate-800 bg-[#090d16]/30 hover:border-slate-700 transition-all space-y-2 relative group text-left"
+                    >
+                      {/* Version Header */}
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-white font-mono font-bold text-[8px]">
+                            v{version.versionNumber}
+                          </span>
+                          <span className="text-slate-500 font-mono text-[7.5px]">
+                            {new Date(version.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to restore the canvas to version v${version.versionNumber}? Any unsaved changes will be lost.`)) {
+                              restoreProjectVersion(version._id);
+                            }
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-[8px] font-bold px-2 py-0.5 rounded bg-indigo-650 text-white hover:bg-indigo-500 transition-all"
+                        >
+                          Restore
+                        </button>
+                      </div>
+
+                      {/* Version description */}
+                      <p className="text-slate-300 font-semibold text-[8.5px] leading-snug">
+                        {version.description || (isAI ? 'AI Generation' : 'Manual Snapshot')}
+                      </p>
+
+                      {/* AI details if any */}
+                      {version.prompt && (
+                        <div className="p-1.5 rounded bg-black/40 border border-slate-900 text-[7.5px] text-slate-400 font-mono line-clamp-3 hover:line-clamp-none cursor-pointer leading-normal">
+                          &gt; {version.prompt}
+                        </div>
+                      )}
+
+                      {/* Badge representation */}
+                      <div className="flex items-center gap-1 mt-1">
+                        {version.changeType === 'ai_create' && (
+                          <span className="text-[7px] uppercase font-bold tracking-wider px-1 py-0.2 rounded border border-indigo-500/30 bg-indigo-500/10 text-indigo-400">
+                            AI Generate
+                          </span>
+                        )}
+                        {version.changeType === 'ai_refine' && (
+                          <span className="text-[7px] uppercase font-bold tracking-wider px-1 py-0.2 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                            AI Refined
+                          </span>
+                        )}
+                        {version.changeType === 'ai_prototype' && (
+                          <span className="text-[7px] uppercase font-bold tracking-wider px-1 py-0.2 rounded border border-violet-500/30 bg-violet-500/10 text-violet-400">
+                            AI Prototype
+                          </span>
+                        )}
+                        {version.changeType === 'manual' && (
+                          <span className="text-[7px] uppercase font-bold tracking-wider px-1 py-0.2 rounded border border-slate-700 bg-slate-800/20 text-slate-500">
+                            Manual
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
