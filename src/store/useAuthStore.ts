@@ -3,6 +3,11 @@ import { create } from 'zustand';
 const LS_TOKEN_KEY = 'genovax_auth_token';
 const LS_USER_KEY = 'genovax_auth_user';
 
+let onLogoutCallback: (() => void) | null = null;
+export const registerLogoutCallback = (cb: () => void) => {
+  onLogoutCallback = cb;
+};
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -115,12 +120,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     
     // Clear builder store projects state
     try {
-      const { setProjects, setActiveProjectId, setPages } = require('./useBuilderStore').useBuilderStore.getState();
-      setProjects([]);
-      setActiveProjectId(null);
-      setPages([{ id: 'home', name: 'Home Page', components: [] }]);
+      if (onLogoutCallback) {
+        onLogoutCallback();
+      }
     } catch (e) {
-      // Fallback if imported at wrong phase
       console.warn('Could not reset builder store state synchronously', e);
     }
     

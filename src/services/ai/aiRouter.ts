@@ -361,11 +361,11 @@ export async function generatePrototype(
 
     // STEP 1: Plan the navbar links, brand name, and the list of pages.
     const planPrompt = `You are a premium UI/UX planner designing a website prototype for: "${userPrompt}"
-Plan a 4-page prototype matching the site type: "${siteType}".
+Plan a prototype matching the site type: "${siteType}".
 Determine:
 1. The brand/company name.
-2. The exact 4 pages to generate (Home, and 3 sub-pages).
-3. The navigation link options.
+2. The exact navigation links that will be displayed in the navbar (e.g. "Home, Features, Pricing, Docs, Sign In").
+3. The list of pages corresponding 1:1 to these navbar navigation link labels.
 
 Return ONLY a valid JSON matching this schema:
 {
@@ -386,7 +386,7 @@ Return ONLY a valid JSON matching this schema:
           "zIndex": 1,
           "contentOverrides": {
             "brand": "BrandName",
-            "navLinks": "Home, Link 1, Link 2, Link 3"
+            "navLinks": "Home, Features, Pricing, Docs, Sign In"
           }
         }
       ],
@@ -395,7 +395,7 @@ Return ONLY a valid JSON matching this schema:
   ]
 }
 
-Make sure there are EXACTLY 4 pages in the pages array. Return ONLY this raw JSON object.`;
+Ensure there is a page element in the "pages" array for EACH navigation link listed in the navbar's "navLinks" content. Return ONLY this raw JSON object.`;
 
     const planResult = await callBackendGenerate(planPrompt, 'prototype', provider);
     const protoPlan: AIPrototypePlan = planResult.plan;

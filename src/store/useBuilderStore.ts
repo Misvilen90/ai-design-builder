@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { TEMPLATES_LIST } from './templatesData';
 import { getProjects, updateCanvas, getCanvas, renameProject as renameProjectApi, createProject as createProjectApi, deleteProject as deleteProjectApi, createVersion as createVersionApi, getVersions as getVersionsApi, restoreVersion as restoreVersionApi } from '../services/projectApi';
+import { useAuthStore, registerLogoutCallback } from './useAuthStore';
 
 export interface ComponentStyle {
   fontFamily?: string;
@@ -163,7 +164,7 @@ interface BuilderState {
   mediaAssets: Array<{ id: string; type: 'image' | 'video'; name: string; url: string }>;
   addMediaAsset: (asset: { type: 'image' | 'video'; name: string; url: string }) => void;
   deleteMediaAsset: (id: string) => void;
-  saveProject: () => void;
+  saveProject: () => Promise<void>;
   setSelectedAll: () => void;
   reorderPage: (draggedId: string, targetId: string) => void;
 }
@@ -1094,7 +1095,7 @@ set((state) => ({
     mediaAssets: state.mediaAssets.filter(asset => asset.id !== id)
   })),
 
-  saveProject: () => {
+  saveProject: async () => {
     const { pages, activePageId, projects, activeProjectId } = get();
     const now = new Date().toISOString();
 
@@ -1108,6 +1109,12 @@ set((state) => ({
     );
     localStorage.setItem('genovax_projects_list', JSON.stringify(updatedProjects));
     set({ projects: updatedProjects });
+
+    // Save to database if logged in
+    const token = useAuthStore.getState().token;
+    if (token) {
+      await get().saveCurrentProject();
+    }
   },
 
   setSelectedAll: () => {
@@ -1134,5 +1141,20 @@ set((state) => ({
     });
   },
 };
+});
+
+// Register callback to safely clear builder state on user logout (resolving circular dependency)
+registerLogoutCallback(() => {
+  useBuilderStore.setState({
+    projects: [],
+    activeProjectId: null,
+    pages: [{ id: 'home', name: 'Home Page', components: [] }],
+    activePageId: 'home',
+    selectedComponentId: null,
+    selectedComponentIds: [],
+    history: [],
+    redoHistory: [],
+    projectVersions: []
+  });
 });
 

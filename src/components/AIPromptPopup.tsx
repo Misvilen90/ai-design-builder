@@ -239,7 +239,7 @@ export const AIPromptPopup: React.FC<AIPromptPopupProps> = ({
         }
       }
       
-      saveProject();
+      await saveProject();
 
       // Create a database version history entry
       const currentPages = useBuilderStore.getState().pages;

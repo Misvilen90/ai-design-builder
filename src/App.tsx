@@ -62,6 +62,7 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
     loadProject,
     loadProjects,
     deleteProject,
+    createNewProject,
     pages,
     activePageId
   } = useBuilderStore();
@@ -81,6 +82,14 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
     if (isPreview) return;
     loadProjects();
   }, [isPreview, user]);
+
+  // Reload projects from database whenever navigating to the Projects View
+  useEffect(() => {
+    if (isPreview) return;
+    if (currentView === 'projects') {
+      loadProjects();
+    }
+  }, [currentView, isPreview]);
  
   // Global listeners for events dispatched from sidebar icons
   useEffect(() => {
@@ -135,7 +144,7 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
         }
         if (e.key === 's' || e.key === 'S') {
           e.preventDefault();
-          useBuilderStore.getState().saveProject();
+          useBuilderStore.getState().saveProject().catch(console.error);
           return;
         }
         if (e.key === 'd' || e.key === 'D') {
@@ -425,10 +434,8 @@ const AuthenticatedApp: React.FC<AuthenticatedAppProps> = ({ isPreview, onLogout
                   if (!name || !name.trim()) return;
                 
                   try {
-                    await createProject(name.trim());
-                
-                    await loadProjects();
-                
+                    await createNewProject(name.trim());
+                    setCurrentView('builder');
                     alert('Project created successfully');
                   } catch (error) {
                     console.error('Create project failed:', error);

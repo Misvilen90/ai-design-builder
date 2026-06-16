@@ -14,7 +14,8 @@ import {
   UploadCloud, 
   Code,
   Sparkles,
-  Eye
+  Eye,
+  Edit3
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -44,13 +45,16 @@ export const Header: React.FC<HeaderProps> = ({
     history,
     redoHistory,
     activeProjectId,
-    saveCurrentProject
+    saveCurrentProject,
+    projects,
+    renameProject
   } = useBuilderStore();
 
   const activePage = pages.find(p => p.id === activePageId);
+  const activeProject = projects.find(p => p.id === activeProjectId);
 
   const handleSave = () => {
-    if (!activeProjectId) {
+    if (!activeProjectId || activeProjectId.startsWith('project-')) {
       const name = prompt('Enter a name for your new project:');
       if (name && name.trim()) {
         saveCurrentProject(name.trim());
@@ -89,6 +93,27 @@ export const Header: React.FC<HeaderProps> = ({
             <Sparkles className="w-5 h-5 text-indigo-500 fill-indigo-500/20" />
             GenovaX
           </span>
+          {activeProject && (
+            <div className={`flex items-center gap-1.5 ml-2 pl-2 border-l ${
+              theme === 'dark' ? 'border-slate-800' : 'border-slate-200'
+            }`}>
+              <span 
+                onClick={() => {
+                  const newName = prompt('Rename project:', activeProject.name);
+                  if (newName && newName.trim()) {
+                    renameProject(activeProjectId!, newName.trim());
+                  }
+                }}
+                className={`text-[11px] font-semibold cursor-pointer flex items-center gap-1 transition-colors ${
+                  theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                }`}
+                title="Click to rename project"
+              >
+                {activeProject.name}
+                <Edit3 className="w-3 h-3 opacity-65" />
+              </span>
+            </div>
+          )}
         </div>
 
         {activePage && (
